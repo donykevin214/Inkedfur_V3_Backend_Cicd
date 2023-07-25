@@ -11,28 +11,28 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       SERVER_PASSWORD: ${{secrets.PASSWORD}}
-    steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16  # Specify the Node.js version you need
-
-      # - name: Install Dependencies
-      #   run: |
-      #     npm install
-
-      - name: Deploy to server
-        run: |
-          sshpass -p "$SERVER_PASSWORD" scp -rv root@45.79.9.153:/root/inkedfur-v3-backend-cicd
     # steps:
-    #   - name: Deploy using ssh
-    #     uses: appleboy/ssh-action@master
+    #   - name: Setup Node.js
+    #     uses: actions/setup-node@v2
     #     with:
-    #       host: ${{ secrets.HOST }}
-    #       username: ${{ secrets.USERNAME }}
-    #       password: "inkedfur-v3"
-    #       port: 22
-    #       script: |
-    #         cd /root/inkedfur-v3-backend-cicd
-    #         git pull -r
-    #         npm install
+    #       node-version: 16  # Specify the Node.js version you need
+
+    #   # - name: Install Dependencies
+    #   #   run: |
+    #   #     npm install
+
+    #   - name: Deploy to server
+    #     run: |
+    #       sshpass -p "$SERVER_PASSWORD" scp -rv root@45.79.9.153:/root/inkedfur-v3-backend-cicd
+    steps:
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: "inkedfur-v3"
+          port: 22
+          script: |
+            cd /root/inkedfur-v3-backend-cicd
+            git pull origin main
+            # npm install
