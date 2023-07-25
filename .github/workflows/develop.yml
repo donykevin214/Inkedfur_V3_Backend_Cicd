@@ -18,11 +18,13 @@ jobs:
           node-version: 16  # Specify the Node.js version you need
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd /root/inkedfur-v3-backend-cicd
+          npm install
 
       - name: Deploy to server
         run: |
-          sshpass -p "$SERVER_PASSWORD" scp -rv /inkedfur-v3-backend-cicd root@45.79.9.153:/root/inkedfur-v3-backend-cicd
+          sshpass -p "$SERVER_PASSWORD" scp -rv root@45.79.9.153:/root/inkedfur-v3-backend-cicd
     # steps:
     #   - name: Deploy using ssh
     #     uses: appleboy/ssh-action@master
