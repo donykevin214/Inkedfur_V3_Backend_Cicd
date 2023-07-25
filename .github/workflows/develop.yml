@@ -22,6 +22,11 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16.14.0  # Specify the Node.js version you need
+          
+      - name: Set up bash
+        run: |
+          sudo ln -sf /bin/bash /bin/sh
+
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         with:
