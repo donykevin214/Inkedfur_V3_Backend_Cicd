@@ -28,6 +28,5 @@ jobs:
           port: 22
           script: |
             cd /root/inkedfur-v3-backend-cicd
-            git stash
             git pull -r
-            yarn install
+            npm install
