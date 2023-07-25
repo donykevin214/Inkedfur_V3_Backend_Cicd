@@ -17,7 +17,7 @@ jobs:
 
       - name: Deploy to server
         run: |
-          sshpass -p "$SERVER_PASSWORD" scp -r ./inkedfur-v3-backend-cicd root@45.79.9.153:/root/inkedfur-v3-backend-cicd
+          sshpass -p "$SERVER_PASSWORD" scp -rv /root/inkedfur-v3-backend-cicd root@45.79.9.153:/root/inkedfur-v3-backend-cicd
     # steps:
     #   - name: Deploy using ssh
     #     uses: appleboy/ssh-action@master
