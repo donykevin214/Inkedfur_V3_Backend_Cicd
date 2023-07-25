@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 16  # Specify the Node.js version you need
+          node-version: 16.14.0  # Specify the Node.js version you need
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         with:
