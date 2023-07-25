@@ -24,7 +24,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          password: "$SERVER_PASSWORD"
+          password: "inkedfur-v3"
           port: 22
           script: |
             cd /root/inkedfur-v3-backend-cicd
