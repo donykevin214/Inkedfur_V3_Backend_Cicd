@@ -43,4 +43,4 @@ jobs:
           script: |
             cd /root/inkedfur-v3-backend-cicd
             git pull origin main
-            npm install
+            sudo npm install
