@@ -30,9 +30,9 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          password: "inkedfur-v3"
+          password: ${{ secrets.PASSWORD }}
           port: 22
           script: |
             cd /root/inkedfur-v3-backend-cicd
             git pull origin main
-            # npm install
+            npm install
