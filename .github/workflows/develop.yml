@@ -22,7 +22,13 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16.14.0  # Specify the Node.js version you need
-          
+      
+      - name: Print Node.js version
+        run: node --version
+      
+      - name: Print PATH
+        run: echo $PATH
+
       - name: Set up bash
         run: |
           sudo ln -sf /bin/bash /bin/sh
