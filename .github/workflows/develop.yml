@@ -17,10 +17,9 @@ jobs:
         with:
           node-version: 16  # Specify the Node.js version you need
 
-      - name: Install Dependencies
-        run: |
-          cd /root/inkedfur-v3-backend-cicd
-          npm install
+      # - name: Install Dependencies
+      #   run: |
+      #     npm install
 
       - name: Deploy to server
         run: |
