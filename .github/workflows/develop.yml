@@ -11,25 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       SERVER_PASSWORD: ${{secrets.PASSWORD}}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Deploy to server
-        run: |
-          sshpass -p "$SERVER_PASSWORD" scp -rv /root/inkedfur-v3-backend-cicd root@45.79.9.153:/root/inkedfur-v3-backend-cicd
     # steps:
-    #   - name: Deploy using ssh
-    #     uses: appleboy/ssh-action@master
-    #     with:
-    #       host: ${{ secrets.HOST }}
-    #       username: ${{ secrets.USERNAME }}
-    #       password: ${{ secrets.PASSWORD }}
-    #       port: 22
-    #       script: |
-    #         cd /root/inkedfur-v3-backend-cicd
-    #         sh ./scripts/application_stop.sh
-    #         git stash
-    #         git pull -r
-    #         yarn install
-    #         sh ./scripts/application_start.sh
+    #   - name: Checkout code
+    #     uses: actions/checkout@v2
+
+    #   - name: Deploy to server
+    #     run: |
+    #       sshpass -p "$SERVER_PASSWORD" scp -rv /root/inkedfur-v3-backend-cicd root@45.79.9.153:/root/inkedfur-v3-backend-cicd
+    steps:
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: "$SERVER_PASSWORD"
+          port: 22
+          script: |
+            cd /root/inkedfur-v3-backend-cicd
+            sh ./scripts/application_stop.sh
+            git stash
+            git pull -r
+            yarn install
+            sh ./scripts/application_start.sh
