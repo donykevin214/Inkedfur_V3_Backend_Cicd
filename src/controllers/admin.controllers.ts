@@ -53,30 +53,31 @@ const getApplicationById = async (req: Request, res: Response) => {
 }
 
 const getCreatorsByStatus = async (req: Request, res: Response) => {
-    const { skip, index, status } = req.body
+    const { skip, index, status, search } = req.body
     try {
+        const regexQuery = new RegExp(search, "i");
         let creators;
         let totalCount;
         if (status == 'All') {
             creators = await User.find({
                 roles: Roles.CREATOR,
                 active: true,
-            }).limit(skip).skip((index - 1) * skip);
+            }).limit(skip).skip((index - 1) * skip).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);
             totalCount = await User.count({
                 roles: Roles.CREATOR,
                 active: true,
-            });
+            }).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);;
         } else {
             creators = await User.find({
                 roles: Roles.CREATOR,
                 status,
                 active: true,
-            }).limit(skip).skip((index - 1) * skip);
+            }).limit(skip).skip((index - 1) * skip).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);;
             totalCount = await User.count({
                 roles: Roles.CREATOR,
                 status,
                 active: true,
-            });
+            }).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);;
         }
 
         return res.json({ success: true, creators, totalCount });
@@ -87,16 +88,17 @@ const getCreatorsByStatus = async (req: Request, res: Response) => {
 }
 
 const getCustomers = async (req: Request, res: Response) => {
-    const { skip, index, status } = req.body
+    const { skip, index, search } = req.body
     try {
+        const regexQuery = new RegExp(search, "i");
         const customers = await User.find({
             roles: Roles.CUSTOMER,
             active: true,
-        }).limit(skip).skip((index - 1) * skip);
+        }).limit(skip).skip((index - 1) * skip).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);
         const totalCount = await User.count({
             roles: Roles.CUSTOMER,
             active: true,
-        });
+        }).or([{ username: { $regex: regexQuery } }, { firstname: { $regex: regexQuery } }, { lastname: { $regex: regexQuery } }, { description: { $regex: regexQuery } }]);
 
         return res.json({ success: true, customers, totalCount });
     } catch (err) {
@@ -340,7 +342,11 @@ const getTotalStatistic = async (req: Request, res: Response) => {
             {
                 $group: {
                     _id: { "year_month_day": { $substrCP: ["$createdAt", 0, 10] } },
-                    count: { $sum: 1 }
+                    count: {
+                        $sum: {
+                            "$toInt": "$visitors"
+                        }
+                    }
                 }
             },
             {
@@ -362,7 +368,7 @@ const getTotalStatistic = async (req: Request, res: Response) => {
                 }
             },
         ])
-        return res.json({ success: true, user_statistic });
+        return res.json({ success: true, user_statistic, visitor_statistic });
     } catch (err) {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid admin data:');
