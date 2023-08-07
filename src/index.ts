@@ -13,5 +13,3 @@ const log = debug('app:main');
     log(`Server listening on : %s`, `${config.publicUrl}`);
   });
 })();
-
-///

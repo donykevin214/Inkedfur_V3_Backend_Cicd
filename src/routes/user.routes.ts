@@ -146,6 +146,17 @@ module.exports = {
                     ],
                 },
             },
+        },
+        {
+            path: '/deleteUser',
+            methods: {
+                post: {
+                    middlewares: [
+                        isAuthenticated,
+                        userCtrls.deleteUser
+                    ],
+                },
+            },
         }
     ],
 };

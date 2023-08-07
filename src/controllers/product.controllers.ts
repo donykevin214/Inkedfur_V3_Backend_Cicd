@@ -108,8 +108,8 @@ const getProductById = async (req: Request, res: Response) => {
             return res.json({ success: true, product: undefined });
         }
         const user = await User.findById(product.user_id);
-        const versions = await Product.find({ submission_id: product._id });
-        const relatedProducts = await Product.find({ category: product.category }).limit(10);
+        const versions = await Product.find({ submission_id: product._id, status: PRODUCT_STATUS.PUBLISHED });
+        const relatedProducts = await Product.find({ category: product.category, status: PRODUCT_STATUS.PUBLISHED }).limit(10);
         return res.json({ success: true, product, versions, creator: user && getPublic(user, 'creator'), relatedProducts });
     } catch (err) {
         log('error', 'err:', err);

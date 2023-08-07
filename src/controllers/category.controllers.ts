@@ -5,7 +5,7 @@
  * @param {Function} next Go to the next middleware
  */
 
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { sendError } from '~/helpers/jwt.helper';
 import debug from 'debug';
 import Category from '~/models/category.model';
@@ -13,58 +13,71 @@ import Category from '~/models/category.model';
 const log = debug('app:controllers:category');
 
 const getAllCategories = async (req: Request, res: Response) => {
+    const { children } = req.body;
     try {
-        const categories = await Category.find();
-        return res.json({success: true, categories});
-    }  catch (err) {
-        log('error', 'err:', err);
-        return sendError(req, res, 400, 'Invalid category data');
-    }
-}
-
-const addCategory = async (req: Request, res: Response) => {
-    const {category_name, parent} = req.body;
-    try {
-        const category = await Category.findOne({category_name, parent});
-        if(category){
-            return sendError(req, res, 400, 'Already exist same category');    
+        let categories: any = [];
+        const category = await Category.find({ children });
+        if (!category) {
+            return sendError(req, res, 400, 'Empty Category');
         }
-        await Category.create({category_name, parent});
-        return res.json({success: true});
-    }  catch (err) {
+        for (let i = 0; i < category.length; i++) {
+            const sub_count = await Category.count({ children: category[i]._id })
+            categories.push({
+                _id: category[i]._id,
+                category_name: category[i].category_name,
+                nsfw: category[i].nsfw,
+                subCount: sub_count,
+            })
+        }
+
+
+        return res.json({ success: true, categories });
+    } catch (err) {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid category data');
     }
 }
 
-const updateCategory = async (req: Request, res: Response) => {
-    const {category_id, category_name} = req.body;
+const addCategory = async (req: Request, res: Response, next: NextFunction) => {
+    const { category_name, nsfw, children, prints } = req.body;
+    try {
+        await Category.create({ category_name, nsfw, children, prints });
+        return next();
+    } catch (err) {
+        log('error', 'err:', err);
+        return sendError(req, res, 400, 'Invalid category data');
+    }
+}
+
+const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
+    const { category_id, category_name, nsfw } = req.body;
     try {
         const category = await Category.findById(category_id);
-        if(!category){
-            return sendError(req, res, 400, 'Category does not exist');    
+        if (!category) {
+            return sendError(req, res, 400, 'Category does not exist');
         }
         category.category_name = category_name;
+        category.nsfw = nsfw;
         await category.save();
-        return res.json({success: true});
-    }  catch (err) {
+        return next();
+    } catch (err) {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid category data');
     }
 }
 
-const deleteCategory = async (req: Request, res: Response) => {
+const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
     const { category_id } = req.body;
     try {
         const category = await Category.findById(category_id);
-        if(!category){
-            return sendError(req, res, 400, 'Category does not exist');    
+        if (!category) {
+            return sendError(req, res, 400, 'Category does not exist');
         }
         await category.deleteOne();
-        return res.json({success: true});
-    }  catch (err) {
+        return next();
+    } catch (err) {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid category data');
     }
 }
-export default {getAllCategories, addCategory, updateCategory, deleteCategory};
+export default { getAllCategories, addCategory, updateCategory, deleteCategory };

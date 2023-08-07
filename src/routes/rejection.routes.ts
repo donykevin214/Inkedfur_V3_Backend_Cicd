@@ -1,57 +1,54 @@
-import categoryCtrls from '~/controllers/category.controllers';
+import rejectionCtrls from '~/controllers/rejection.controllers';
 import { isAdmin, isAuthenticated } from '~/controllers/common.controllers';
 
 /**
  * @type { Routes.default }
  */
 module.exports = {
-    prefix: '/category',
+    prefix: '/rejection',
     routes: [
         {
-            path: '/getAllCategories',
+            path: '/getRejection',
             methods: {
-                post: {
+                get: {
                     middlewares: [
-                        categoryCtrls.getAllCategories
+                        rejectionCtrls.getRejection
                     ],
                 },
             },
         },
         {
-            path: '/addCategory',
+            path: '/addRejection',
             methods: {
                 post: {
                     middlewares: [
                         isAuthenticated,
                         isAdmin,
-                        categoryCtrls.addCategory,
-                        categoryCtrls.getAllCategories
+                        rejectionCtrls.addRejection
                     ],
                 },
             },
         },
         {
-            path: '/updateCategory',
+            path: '/updateRejection',
             methods: {
                 post: {
                     middlewares: [
                         isAuthenticated,
                         isAdmin,
-                        categoryCtrls.updateCategory,
-                        categoryCtrls.getAllCategories
+                        rejectionCtrls.updateRejection
                     ],
                 },
             },
         },
         {
-            path: '/deleteCategory',
+            path: '/deleteRejection',
             methods: {
                 post: {
                     middlewares: [
                         isAuthenticated,
                         isAdmin,
-                        categoryCtrls.deleteCategory,
-                        categoryCtrls.getAllCategories
+                        rejectionCtrls.deleteRejection
                     ],
                 },
             },

@@ -14,15 +14,14 @@ import uploadFile from '~/helpers/uploadfile.helper';
 import Submission from '~/models/submission.model';
 import Product from '~/models/product.model';
 import Statistic from '~/models/statistic.model';
+import Store from '~/models/store.model';
 
 const log = debug('app:controllers:user');
 
 const setUserStatus = async (req: Request, res: Response) => {
     const { user_id, status } = req.body;
     try {
-        const user = await User.findOne({
-            id: user_id,
-        });
+        const user = await User.findById(user_id);
         if (!user) {
             return sendError(req, res, 400, 'User does not exist.');
         }
@@ -51,7 +50,6 @@ const setUserStatusByIpAddress = async (req: Request, res: Response) => {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid user data:');
     }
-
 }
 
 const updateSignature = async (req: Request, res: Response) => {
@@ -151,6 +149,7 @@ const updateRole = async (req: Request, res: Response) => {
         }
         user.roles = role;
         await user.save();
+        return res.json({ success: true });
     } catch (err) {
         log('error', 'err:', err);
         return sendError(req, res, 400, 'Invalid user data:');
@@ -401,4 +400,19 @@ const creatorSetting = async (req: Request, res: Response) => {
     }
 }
 
-export default { getStatistic, setUserStatus, setUserStatusByIpAddress, editProfile, getCustomers, getCreatorByID, getCreators, getTopCreators, updateRole, updateUserName, updateSignature, creatorSetting, updateVisitors };
+const deleteUser = async (req: Request, res: Response) => {
+    const { user_id } = req.body;
+    try {
+        const user = await User.findById(user_id);
+        if (!user) {
+            return sendError(req, res, 400, 'User does not exist.');
+        }
+        await user.deleteOne();
+        return res.json({ success: true });
+    } catch (err) {
+        log('error', 'err:', err);
+        return sendError(req, res, 400, 'Invalid user data:');
+    }
+}
+
+export default { getStatistic, setUserStatus, setUserStatusByIpAddress, editProfile, getCustomers, getCreatorByID, getCreators, getTopCreators, updateRole, updateUserName, updateSignature, creatorSetting, updateVisitors, deleteUser };

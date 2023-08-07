@@ -74,11 +74,11 @@ const productSchema = new mongoose.Schema(
                 {
                     size: {
                         type: String,
-                        default: '1:1'
+                        default: ''
                     },
                     value: {
-                        type: Number,
-                        default: 0,
+                        type: String,
+                        default: '',
                     },
                     quantity: {
                         type: Number,
@@ -105,6 +105,7 @@ const productSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+productSchema.index({ "$**": "text" });
 const Product = mongoose.model('Product', productSchema);
 
 export default Product;

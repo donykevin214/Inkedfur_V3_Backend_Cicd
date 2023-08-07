@@ -1,57 +1,62 @@
-import categoryCtrls from '~/controllers/category.controllers';
 import { isAdmin, isAuthenticated } from '~/controllers/common.controllers';
+import typeCtrls from '~/controllers/type.controllers';
 
 /**
  * @type { Routes.default }
  */
 module.exports = {
-    prefix: '/category',
+    prefix: '/type',
     routes: [
         {
-            path: '/getAllCategories',
+            path: '/getProductTypes',
             methods: {
-                post: {
+                get: {
                     middlewares: [
-                        categoryCtrls.getAllCategories
+                        typeCtrls.getProductTypes
                     ],
                 },
             },
         },
         {
-            path: '/addCategory',
+            path: '/addType',
             methods: {
                 post: {
                     middlewares: [
-                        isAuthenticated,
-                        isAdmin,
-                        categoryCtrls.addCategory,
-                        categoryCtrls.getAllCategories
+                        typeCtrls.addType
                     ],
                 },
             },
         },
         {
-            path: '/updateCategory',
+            path: '/addOption',
             methods: {
                 post: {
                     middlewares: [
                         isAuthenticated,
                         isAdmin,
-                        categoryCtrls.updateCategory,
-                        categoryCtrls.getAllCategories
+                        typeCtrls.addNewOption
                     ],
                 },
             },
         },
         {
-            path: '/deleteCategory',
+            path: '/getSize',
+            methods: {
+                post: {
+                    middlewares: [
+                        typeCtrls.getSize
+                    ],
+                },
+            },
+        },
+        {
+            path: '/addSize',
             methods: {
                 post: {
                     middlewares: [
                         isAuthenticated,
                         isAdmin,
-                        categoryCtrls.deleteCategory,
-                        categoryCtrls.getAllCategories
+                        typeCtrls.addNewSize
                     ],
                 },
             },

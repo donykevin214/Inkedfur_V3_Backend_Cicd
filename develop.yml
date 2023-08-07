@@ -1,0 +1,27 @@
+name: Deploy Inkedfur
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-s1:
+    name: Deploy backend 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          # key: ${{ secrets.PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /root/inkedfur-v3-backend
+            sh ./scripts/application_stop.sh
+            git stash
+            git pull -r
+            yarn install
+            sh ./scripts/application_start.sh

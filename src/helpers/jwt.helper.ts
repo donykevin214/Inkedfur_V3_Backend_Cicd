@@ -65,6 +65,7 @@ export const getPublic = (object: object, type = 'customer') => {
         'tos_href',
         'active',
         'status',
+        'createdAt',
       ]);
     default:
       return object;

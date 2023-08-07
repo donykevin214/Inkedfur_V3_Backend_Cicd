@@ -118,8 +118,11 @@ const addGalleryLink = async (req: Request, res: Response) => {
     const user = await User.findOne({
       email: email.toLowerCase(), roles: roles,
     });
-    user && (user.galleryLinks = galleryLinks);
-    user && (await user.save());
+    if (!user) {
+      return sendError(req, res, 400, 'User does not exist.');
+    }
+    user.galleryLinks = galleryLinks;
+    await user.save();
 
     return res.json({ success: true });
   } catch (err) {
