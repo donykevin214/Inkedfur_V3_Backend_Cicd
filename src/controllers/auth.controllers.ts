@@ -1,10 +1,9 @@
 /**
- * 
+ *
  * @param {import('express').Request} req The request
  * @param {import('express').Response} res The response
  * @param {Function} next Go to the next middleware
  */
-
 
 import { Request, Response, NextFunction } from 'express';
 import { sendError, signToken, getPublic } from '~/helpers/jwt.helper';
@@ -15,7 +14,7 @@ import Product from '~/models/product.model';
 import VerifyCode from '~/models/verifycode.model';
 import env from '~/lib/nunjucks';
 import mailGun from '~/lib/mailgun';
-import config from "~/config";
+import config from '~/config';
 import crypto from 'node:crypto';
 import { Roles, VERIFY_CODE_TYPES } from '~/helpers/constants.helper';
 import Store from '~/models/store.model';
@@ -23,11 +22,12 @@ import Cart from '~/models/cart.model';
 const log = debug('app:controllers:auth');
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password, username, birthday, roles, firstname, lastname, } = req.body;
+  console.log(req.body);
+  const { email, password, username, birthday, roles, firstname, lastname } = req.body;
   try {
     const existUser = await User.findOne({
       email: email.toLowerCase(),
-      roles
+      roles,
     });
 
     if (existUser) {
@@ -47,7 +47,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
     const customer = await User.findOne({
       email: email.toLowerCase(),
-      roles: Roles.CUSTOMER
+      roles: Roles.CUSTOMER,
     });
     let user;
     if (customer && (roles === Roles.CREATOR || roles === Roles.ADMIN)) {
@@ -57,22 +57,28 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       customer.lastname = lastname;
       customer.ip_address = ipAddress;
       await customer.save();
-    }
-    else {
+    } else {
       // const userbyip = await User.find({ip_address: ipAddress});
       // if (userbyip) {
       //   return sendError(req, res, 400, 'Your IP Address already exists.');
       // }
-      user = await User.create({ email: email.toLowerCase(), password, username, birthday, roles, ip_address: ipAddress });
+      user = await User.create({
+        email: email.toLowerCase(),
+        password,
+        username,
+        birthday,
+        roles,
+        ip_address: ipAddress,
+      });
     }
-
 
     await VerifyCode.create({
       email: email.toLowerCase(),
       code,
       type: VERIFY_CODE_TYPES.VALIDATE_EMAIL,
     });
-    await mailGun(email.toLowerCase(), 'Activate your account', template);
+    // await mailGun(email.toLowerCase(), 'Activate your account', template);
+
     if (roles === Roles.CREATOR) {
       return next();
     } else {
@@ -89,7 +95,7 @@ const createStore = async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({
       email: email.toLowerCase(),
-      roles: Roles.CREATOR
+      roles: Roles.CREATOR,
     });
 
     if (!user) {
@@ -104,19 +110,26 @@ const createStore = async (req: Request, res: Response) => {
       return sendError(req, res, 400, 'Your store already exists.');
     }
 
-    await Store.create({ user_id: user.id, name: store_name, description, status, contentCategory: content_category });
+    await Store.create({
+      user_id: user.id,
+      name: store_name,
+      description,
+      status,
+      contentCategory: content_category,
+    });
     return res.json({ success: true, user: user && getPublic(user, 'creator') });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid user data:');
   }
-}
+};
 
 const addGalleryLink = async (req: Request, res: Response) => {
   const { email, roles, galleryLinks } = req.body;
   try {
     const user = await User.findOne({
-      email: email.toLowerCase(), roles: roles,
+      email: email.toLowerCase(),
+      roles: roles,
     });
     if (!user) {
       return sendError(req, res, 400, 'User does not exist.');
@@ -129,7 +142,7 @@ const addGalleryLink = async (req: Request, res: Response) => {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid user data:');
   }
-}
+};
 
 const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -168,7 +181,7 @@ const login = async (req: Request, res: Response) => {
     if (!wishlist_product) {
       return res.json({ success: true, wishlist: [] });
     }
-    let wishlist = [];
+    const wishlist = [];
     for (let i = 0; i < wishlist_product.length; i++) {
       const product = await Product.findById(wishlist_product[i].product_id);
       if (!product) {
@@ -179,17 +192,29 @@ const login = async (req: Request, res: Response) => {
     const cartListCount = await Cart.count({ user_id });
     const token = user && (await signToken(user.id));
     if (user.roles === Roles.CUSTOMER) {
-      return res
-        .status(200)
-        .json({ success: true, user: user && getPublic(user, 'customer'), wishlistProductIds: wishlist, cartListCount, token });
+      return res.status(200).json({
+        success: true,
+        user: user && getPublic(user, 'customer'),
+        wishlistProductIds: wishlist,
+        cartListCount,
+        token,
+      });
     } else if (user.roles === Roles.CREATOR) {
-      return res
-        .status(200)
-        .json({ success: true, user: user && getPublic(user, 'creator'), wishlistProductIds: wishlist, cartListCount, token });
+      return res.status(200).json({
+        success: true,
+        user: user && getPublic(user, 'creator'),
+        wishlistProductIds: wishlist,
+        cartListCount,
+        token,
+      });
     }
-    return res
-      .status(200)
-      .json({ success: true, user: user && getPublic(user, 'admin'), wishlistProductIds: wishlist, cartListCount, token });
+    return res.status(200).json({
+      success: true,
+      user: user && getPublic(user, 'admin'),
+      wishlistProductIds: wishlist,
+      cartListCount,
+      token,
+    });
   } catch (err) {
     log('Error while login the user', err);
     return sendError(req, res, 400, 'Invalid user data');
@@ -206,7 +231,7 @@ const activateAccount = function activateAccount(placement = 'body') {
       const user = await User.updateOne(
         { email: email.toLowerCase() },
         { $set: { active: true } },
-        { upsert: true }
+        { upsert: true },
       );
       return res.status(200).format({
         json() {
@@ -265,7 +290,7 @@ const resendVerificationCode = async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({
       email: email.toLowerCase(),
-      active: type === 'forgot-password'
+      active: type === 'forgot-password',
     });
 
     if (!user) {
@@ -320,7 +345,7 @@ const resendVerificationCode = async (req: Request, res: Response) => {
       title: options.title,
       code: verifyCode.code,
     });
-    await mailGun(email.toLowerCase(), options.title, template);
+    // await mailGun(email.toLowerCase(), options.title, template);
 
     return res.json({ success: true });
   } catch (err) {
@@ -494,7 +519,7 @@ const changePassword = async (req: Request, res: Response) => {
       title: 'Password changed',
     });
 
-    await mailGun(user.email, 'Password changed Successfully', template);
+    // await mailGun(user.email, 'Password changed Successfully', template);
 
     return res.status(200).json({
       success: true,
@@ -519,7 +544,7 @@ const updatePassword = async (req: Request, res: Response) => {
       title: 'Password Reset Successfully',
     });
 
-    await mailGun(email.toLowerCase(), 'Password Reset Successfully', template);
+    // await mailGun(email.toLowerCase(), 'Password Reset Successfully', template);
 
     return res.status(200).json({ success: true });
   } catch (err) {
@@ -527,7 +552,6 @@ const updatePassword = async (req: Request, res: Response) => {
     return sendError(req, res, 400, 'Invalid user data: ');
   }
 };
-
 
 const logout = async (req: Request, res: Response) => {
   const { user } = req;
@@ -540,4 +564,15 @@ const logout = async (req: Request, res: Response) => {
   return res.status(200).json({ success: true });
 };
 
-export default { register, login, logout, checkCode, activateAccount, resendVerificationCode, updatePassword, changePassword, createStore, addGalleryLink };
+export default {
+  register,
+  login,
+  logout,
+  checkCode,
+  activateAccount,
+  resendVerificationCode,
+  updatePassword,
+  changePassword,
+  createStore,
+  addGalleryLink,
+};
