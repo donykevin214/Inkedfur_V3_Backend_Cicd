@@ -32,6 +32,14 @@ module.exports = {
       },
     },
     {
+      path: '/editType',
+      methods: {
+        post: {
+          middlewares: [typeCtrls.editType],
+        },
+      },
+    },
+    {
       path: '/addOption',
       methods: {
         post: {

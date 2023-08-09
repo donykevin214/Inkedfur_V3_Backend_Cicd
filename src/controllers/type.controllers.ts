@@ -20,7 +20,6 @@ const ObjectId = mongoose.Types.ObjectId;
 const log = debug('app:controllers:type');
 
 const getProductTypes = async (req: Request, res: Response) => {
-  console.log(req.body);
   const { skip, index, search } = req.body;
   try {
     const regexQuery = new RegExp(search, 'i');
@@ -60,8 +59,6 @@ const getAllTypes = async (req: Request, res: Response) => {
 };
 
 const addType = async (req: Request, res: Response) => {
-  console.log(req.body);
-
   const {
     name,
     slug,
@@ -84,9 +81,11 @@ const addType = async (req: Request, res: Response) => {
     } else {
       value = name.toLowerCase();
     }
-    console.log('a');
-    const product_image = await uploadFile(files[0], name);
-    console.log(product_image);
+    let product_image;
+    if (files.length > 0) {
+      product_image = await uploadFile(files[0], name);
+    }
+
     await Type.create({
       name,
       value,
@@ -110,6 +109,62 @@ const addType = async (req: Request, res: Response) => {
   }
 };
 
+const editType = async (req: Request, res: Response) => {
+  const {
+    type_id,
+    name,
+    slug,
+    import_type,
+    description,
+    weight,
+    printable,
+    backorderable,
+    outsourced,
+    selfServices,
+    multiSubmissionOption,
+    royalties,
+    navigation,
+  } = req.body;
+  const files = req.files as Express.Multer.File[];
+  try {
+    let value;
+    if (/\s/g.test(name)) {
+      value = name.split(' ')[1].toLowerCase();
+    } else {
+      value = name.toLowerCase();
+    }
+    const type = await Type.findById(type_id);
+    if (!type) {
+      return sendError(req, res, 400, 'No type exist')
+    }
+    let product_image;
+    if (files.length > 0) {
+      product_image = await uploadFile(files[0], name);
+      type.product_image = product_image || "";
+
+    }
+    type.name = name;
+    type.value = value;
+    type.slug = slug;
+    type.import_type = import_type;
+    type.description = description;
+    type.weight = weight;
+    type.printable = printable;
+    type.backorderable = backorderable;
+    type.outsourced = outsourced;
+    type.selfServices = selfServices;
+    type.multiSubmissionOption = multiSubmissionOption;
+    type.royalties = royalties;
+    type.navigation = navigation;
+
+    await type.save();
+    return res.json({ success: true });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid user data:');
+  }
+};
+
 const addNewOption = async (req: Request, res: Response) => {
   const { type_id, optionName } = req.body;
   try {
@@ -120,18 +175,10 @@ const addNewOption = async (req: Request, res: Response) => {
     type.size_option.push(optionName);
     type.other_fields.push({ name: optionName, values: [] });
     await type.save();
-
-    // await TypeSize.updateMany(
-    //   { type_id: { $exists: true, $type: 'string' } },
-    //   { $set: { bbb: '', type_id: new ObjectId() } },
-    //   { upsert: true },
-    // );
-
-    // addDynamicField(optionName);
     return res.json({ success: true });
   } catch (err) {
     log('error', 'err:', err);
-    return sendError(req, res, 400, err);
+    return sendError(req, res, 400, 'Invalid type data:');
   }
 };
 
@@ -237,7 +284,7 @@ const updateSize = async (req: Request, res: Response) => {
     const type = await Type.findById(updated.type_id);
     type?.other_fields.map((field: any, index) => {
       let flag = 0;
-      field.values.map((item: any, index) => {
+      field.values.map((item: any, index: number) => {
         if (item.size_id == updated._id) {
           flag = 1;
           item.value = updated[field.name];
@@ -275,6 +322,7 @@ export default {
   getProductTypes,
   getAllTypes,
   addType,
+  editType,
   addNewOption,
   getSize,
   addNewSize,
