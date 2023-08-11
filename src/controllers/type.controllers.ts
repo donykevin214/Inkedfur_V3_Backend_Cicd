@@ -10,6 +10,7 @@ import { sendError } from '~/helpers/jwt.helper';
 import debug from 'debug';
 import Support from '~/models/support';
 import Checkout from '~/models/checkout.model';
+import Crop from '~/models/crop.model';
 import Type from '~/models/type.model';
 import uploadFile from '~/helpers/uploadfile.helper';
 import { TypeSize, addDynamicField } from '~/models/typesize.model';
@@ -135,13 +136,12 @@ const editType = async (req: Request, res: Response) => {
     }
     const type = await Type.findById(type_id);
     if (!type) {
-      return sendError(req, res, 400, 'No type exist')
+      return sendError(req, res, 400, 'No type exist');
     }
     let product_image;
     if (files.length > 0) {
       product_image = await uploadFile(files[0], name);
-      type.product_image = product_image || "";
-
+      type.product_image = product_image || '';
     }
     type.name = name;
     type.value = value;
@@ -230,6 +230,20 @@ const getSize = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
+const classifyCrop = (size: string) => {
+  const crop1 = ['1920*1080', '1600*900', '1440*900', '1366*768'];
+  const crop2 = ['1024*768', '1280*720', '832*624'];
+  const crop3 = ['2700*1100', '1300*500'];
+
+  if (crop1.includes(size)) {
+    return '16:9';
+  } else if (crop2.includes(size)) {
+    return '4:3';
+  } else if (crop3.includes(size)) {
+    return '27:11';
+  } else return 'others';
+};
+
 const addNewSize = async (req: Request, res: Response) => {
   console.log(req.body);
   const { type_id, sku_suffix, label, weight, price, size, royalty, other_fields } = req.body;
@@ -255,6 +269,20 @@ const addNewSize = async (req: Request, res: Response) => {
       });
       type.save();
     }
+
+    const cropCount = await Crop.count({ type_id });
+    if (cropCount == 0) {
+      await Crop.create({ name: '16:9', type_id });
+      await Crop.create({ name: '4:3', type_id });
+      await Crop.create({ name: '27:11', type_id });
+      await Crop.create({ name: 'others', type_id });
+    }
+
+    const cropName = await classifyCrop(size);
+    const crop = await Crop.findOne({ name: cropName, type_id });
+    await crop?.sizeList.push({ size: result._id });
+    await crop?.save();
+
     return res.json({ success: true });
   } catch (err) {
     console.log('error', 'err:', err); // Use console.log instead of log
