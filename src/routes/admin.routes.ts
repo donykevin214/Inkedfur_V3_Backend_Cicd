@@ -47,6 +47,14 @@ module.exports = {
       },
     },
     {
+      path: '/clearAsset',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, isAdmin, adminCtrls.clearAsset],
+        },
+      },
+    },
+    {
       path: '/getSubDetail',
       methods: {
         post: {

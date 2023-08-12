@@ -360,7 +360,7 @@ const addProduct = async (req: Request, res: Response) => {
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
-    // const image = await uploadFile(files[0], user?.username || '');
+    const image = await uploadFile(files[0], user?.username || '');
     const status: string = PRODUCT_STATUS.DRAFTS;
     // if (total_products > 5) {
     //     status = PRODUCT_STATUS.PUBLISHED;
@@ -378,7 +378,7 @@ const addProduct = async (req: Request, res: Response) => {
         description,
         sku,
         status,
-        image: '',
+        image,
         submission_id,
       });
       const crops = await Crop.find({ type_id: category });

@@ -15,7 +15,7 @@ import Agreement from '~/models/agreement.model';
 import Checkout from '~/models/checkout.model';
 import Statistic from '~/models/statistic.model';
 import Crop from '~/models/crop.model';
-import mongoose from 'mongoose';
+import mongoose, { model } from 'mongoose';
 const log = debug('app:controllers:admin');
 
 const getCreatorApplication = async (req: Request, res: Response) => {
@@ -154,6 +154,7 @@ const getSubmission = async (req: Request, res: Response) => {
   const { skip, index, creator_id, sortType, OrderType, childType, search, status } = req.body;
 
   try {
+    console.log('asfddd');
     const sortOptions: any = {};
     sortOptions[sortType] = OrderType === 'asc' ? 1 : -1;
     const regexQuery = new RegExp(search, 'i');
@@ -169,6 +170,7 @@ const getSubmission = async (req: Request, res: Response) => {
     }
 
     const submissions = await Product.find(query)
+      .populate({ path: 'user_id', model: 'User' })
       .limit(skip)
       .skip((index - 1) * skip)
       .or([{ product_name: { $regex: regexQuery } }, { description: { $regex: regexQuery } }])
@@ -200,11 +202,27 @@ const getSubDetail = async (req: Request, res: Response) => {
         },
       })
       .then((product) => {
-        console.log(product);
         res.json({ success: true, submission: product });
       });
 
     // return res.json({ success: true, submission });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
+const clearAsset = async (req: Request, res: Response) => {
+  const { sub_id } = req.body;
+
+  try {
+    const submission = await Product.findById(sub_id);
+    if (submission) {
+      submission.image = await '';
+      await submission?.save();
+    }
+
+    return res.json({ success: true });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid admin data:');
@@ -226,7 +244,6 @@ const getSubCropsByType = async (req: Request, res: Response) => {
         },
       })
       .then((product) => {
-        console.log(product?.cropList);
         const cropList: Array<object> = [];
         product?.cropList.map((item: any) => {
           if (item.crop.type_id == type_id) cropList.push(item);
@@ -264,6 +281,7 @@ const createSubCropsByType = async (req: Request, res: Response) => {
 
 const updateSubCropsByType = async (req: Request, res: Response) => {
   const { sub_id, type_id, checks } = req.body;
+  console.log(checks);
 
   try {
     console.log(Object.keys(checks));
@@ -565,6 +583,7 @@ export default {
   getCreatorsByStatus,
   getCustomers,
   getSubmission,
+  clearAsset,
   getSubDetail,
   getSubCropsByType,
   createSubCropsByType,
