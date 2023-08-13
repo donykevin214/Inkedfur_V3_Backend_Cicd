@@ -7,7 +7,7 @@
 import { Request, Response } from 'express';
 import { sendError, getPublic } from '~/helpers/jwt.helper';
 import debug from 'debug';
-import { Roles, USER_STATUS } from '~/helpers/constants.helper';
+import { Roles, USER_STATUS, PRODUCT_STATUS } from '~/helpers/constants.helper';
 import User from '~/models/users.model';
 import Product from '~/models/product.model';
 import Store from '~/models/store.model';
@@ -16,6 +16,7 @@ import Checkout from '~/models/checkout.model';
 import Statistic from '~/models/statistic.model';
 import Crop from '~/models/crop.model';
 import mongoose, { model } from 'mongoose';
+import uploadFile from '~/helpers/uploadfile.helper';
 const log = debug('app:controllers:admin');
 
 const getCreatorApplication = async (req: Request, res: Response) => {
@@ -190,8 +191,14 @@ const getSubDetail = async (req: Request, res: Response) => {
 
   try {
     // const submission = await Product.findById(sub_id);
+    const children = await Product.find({
+      submission_id: sub_id,
+      status: PRODUCT_STATUS.PUBLISHED,
+    });
 
-    Product.findById(sub_id)
+    console.log(children);
+
+    await Product.findById(sub_id)
       .populate('user_id', ['username', 'profile_img'])
       .populate('category.type', 'name')
       .populate({
@@ -202,7 +209,7 @@ const getSubDetail = async (req: Request, res: Response) => {
         },
       })
       .then((product) => {
-        res.json({ success: true, submission: product });
+        res.json({ success: true, submission: product, children });
       });
 
     // return res.json({ success: true, submission });
@@ -219,6 +226,25 @@ const clearAsset = async (req: Request, res: Response) => {
     const submission = await Product.findById(sub_id);
     if (submission) {
       submission.image = await '';
+      await submission?.save();
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
+const resizeImage = async (req: Request, res: Response) => {
+  const { sub_id, username } = req.body;
+  const files = req.files as Express.Multer.File[];
+
+  try {
+    const image = await uploadFile(files[0], username);
+    const submission = await Product.findById(sub_id);
+    if (submission) {
+      submission.image = await image;
       await submission?.save();
     }
 
@@ -306,6 +332,26 @@ const updateSubCropsByType = async (req: Request, res: Response) => {
         await product?.save();
         await res.json({ success: true });
       });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
+const approveSubmission = async (req: Request, res: Response) => {
+  const { sub_id } = req.body;
+
+  try {
+    await Product.updateOne(
+      { _id: sub_id },
+      {
+        $set: {
+          status: 'PUBLISHED',
+        },
+      },
+    );
+
+    return res.json({ success: true });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid admin data:');
@@ -584,10 +630,12 @@ export default {
   getCustomers,
   getSubmission,
   clearAsset,
+  resizeImage,
   getSubDetail,
   getSubCropsByType,
   createSubCropsByType,
   updateSubCropsByType,
+  approveSubmission,
   getCropsByType,
   getAgreement,
   addAgreement,

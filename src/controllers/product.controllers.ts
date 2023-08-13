@@ -123,7 +123,16 @@ const getProductById = async (req: Request, res: Response) => {
   const { id } = req.query;
   console.log(id);
   try {
-    const product = await Product.findById(id).populate('category.type', 'name');
+    const product = await Product.findById(id)
+      .populate('user_id', ['username', 'profile_img'])
+      .populate('category.type', 'name')
+      .populate({
+        path: 'cropList.crop',
+        populate: {
+          path: 'sizeList.size',
+          model: 'Typesize',
+        },
+      });
     if (!product) {
       return res.json({ success: true, product: undefined });
     }
@@ -328,7 +337,7 @@ const addMultiProducts = async (req: Request, res: Response) => {
           submission_id,
         });
       } else {
-        const submission = await Submission.create({ user_id });
+        // const submission = await Submission.create({ user_id });
         await Product.create({
           user_id,
           sku,
@@ -336,7 +345,7 @@ const addMultiProducts = async (req: Request, res: Response) => {
           image,
           store_id,
           product_name: sku,
-          submission_id: submission._id,
+          // submission_id: submission._id,
         });
       }
     }
@@ -351,8 +360,9 @@ const addMultiProducts = async (req: Request, res: Response) => {
 const addProduct = async (req: Request, res: Response) => {
   const { user_id, product_name, category, description, submission_id } = req.body;
   const files = req.files as Express.Multer.File[];
+  console.log(user_id);
   try {
-    const total_products = await Product.count({ user_id });
+    const total_products = await Product.count({ user_id, status: PRODUCT_STATUS.PUBLISHED });
     const user = await User.findById(user_id);
     if (user?.status !== USER_STATUS.ACTIVATE) {
       return sendError(req, res, 400, 'Your account has not been activated yet.');
@@ -361,16 +371,13 @@ const addProduct = async (req: Request, res: Response) => {
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
     const image = await uploadFile(files[0], user?.username || '');
-    const status: string = PRODUCT_STATUS.DRAFTS;
-    // if (total_products > 5) {
-    //     status = PRODUCT_STATUS.PUBLISHED;
-    // } else {
-    //     if (category !== 'PRINTS') {
-    //         status = PRODUCT_STATUS.PENDING_REVIEW;
-    //     } else {
-    //         status = PRODUCT_STATUS.DRAFTS;
-    //     }
-    // }
+    // const image = await '';
+    let status: string = await '';
+    if (total_products > 4) {
+      status = await PRODUCT_STATUS.PUBLISHED;
+    } else {
+      status = await PRODUCT_STATUS.DRAFTS;
+    }
     if (submission_id !== 'undefined') {
       const product = await Product.create({
         user_id,
@@ -382,30 +389,44 @@ const addProduct = async (req: Request, res: Response) => {
         submission_id,
       });
       const crops = await Crop.find({ type_id: category });
-      await crops.map((crop: any, index) => {
-        product.cropList.push({ crop: crop._id });
-      });
+
+      if (total_products > 4) {
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: true });
+        });
+      } else {
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: false });
+        });
+      }
+
       await product.category.push({ type: category });
       await product.save();
-      console.log(product);
     } else {
-      const submission = await Submission.create({ user_id });
+      // const submission = await Submission.create({ user_id });
+      console.log('ddddddddddddddddddddd');
       const product = await Product.create({
         user_id,
         product_name,
         description,
         sku,
         status,
-        image: '',
-        submission_id: submission._id,
+        image,
+        // submission_id: submission._id,
       });
       const crops = await Crop.find({ type_id: category });
-      await crops.map((crop: any, index) => {
-        product.cropList.push({ crop: crop._id });
-      });
+      if (total_products > 4) {
+        console.log('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: true });
+        });
+      } else {
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: false });
+        });
+      }
       await product.category.push({ type: category });
       await product.save();
-      console.log(product);
     }
 
     // const newProduct = await Product.findById
@@ -499,6 +520,40 @@ const updateProductByCreator = async (req: Request, res: Response) => {
   }
 };
 
+const updateTypeCrops = async (req: Request, res: Response) => {
+  const { sub_id, type_id, checks } = req.body;
+  console.log(checks);
+
+  try {
+    console.log(Object.keys(checks));
+    Product.findById(sub_id)
+      .populate('user_id', ['username', 'profile_img'])
+      .populate('category.type', 'name')
+      .populate({
+        path: 'cropList.crop',
+        populate: {
+          path: 'sizeList.size',
+          model: 'Typesize',
+        },
+      })
+      .then(async (product) => {
+        await product?.cropList.map((cropItem: any) => {
+          Object.keys(checks).map((item: string) => {
+            if (cropItem._id == item && cropItem.crop.type_id == type_id) {
+              cropItem.active = checks[item];
+            }
+          });
+        });
+        product.status = await 'PENDING_REVIEW';
+        await product?.save();
+        await res.json({ success: true });
+      });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
 const deleteProduct = async (req: Request, res: Response) => {
   const { product_id } = req.body;
   try {
@@ -523,6 +578,7 @@ export default {
   getProductsCountByUser,
   addProduct,
   updateProductByCreator,
+  updateTypeCrops,
   deleteProduct,
   getProductByUserId,
   getProductByCategory,

@@ -55,6 +55,14 @@ module.exports = {
       },
     },
     {
+      path: '/resizeImage',
+      methods: {
+        post: {
+          middlewares: [adminCtrls.resizeImage],
+        },
+      },
+    },
+    {
       path: '/getSubDetail',
       methods: {
         post: {
@@ -83,6 +91,14 @@ module.exports = {
       methods: {
         post: {
           middlewares: [isAuthenticated, adminCtrls.updateSubCropsByType],
+        },
+      },
+    },
+    {
+      path: '/approveSubmission',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, adminCtrls.approveSubmission],
         },
       },
     },

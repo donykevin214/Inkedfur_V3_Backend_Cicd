@@ -51,6 +51,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     });
     let user;
     if (customer && (roles === Roles.CREATOR || roles === Roles.ADMIN)) {
+      console.log('dddddd');
       customer.birthday = birthday;
       customer.roles = roles;
       customer.firstname = firstname;

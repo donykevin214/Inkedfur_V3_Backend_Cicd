@@ -47,7 +47,7 @@ const productSchema = new mongoose.Schema(
     },
     submission_id: {
       type: Schema.Types.ObjectId,
-      ref: 'Submission',
+      ref: 'Product',
     },
     group: {
       type: String,
@@ -81,7 +81,6 @@ const productSchema = new mongoose.Schema(
         },
         active: {
           type: Boolean,
-          default: true,
         },
       },
     ],
