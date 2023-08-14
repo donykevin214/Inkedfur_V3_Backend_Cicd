@@ -53,6 +53,12 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    importFileName: {
+      type: String,
+    },
+    rowNumber: {
+      type: Number,
+    },
     category: [
       {
         type: {

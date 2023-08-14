@@ -17,6 +17,8 @@ import { USER_STATUS } from '~/helpers/constants.helper';
 import Store from '~/models/store.model';
 import Submission from '~/models/submission.model';
 import { TypeSize } from '~/models/typesize.model';
+import { ObjectId } from 'mongoose';
+import Type from '~/models/type.model';
 const log = debug('app:controllers:product');
 
 const getProductByUserId = async (req: Request, res: Response) => {
@@ -357,6 +359,230 @@ const addMultiProducts = async (req: Request, res: Response) => {
   }
 };
 
+// const addProductBunch = async (req: Request, res: Response) => {
+//   console.log(req.body);
+//   const { csvData } = req.body;
+//   // const files = req.files as Express.Multer.File[];
+
+//   try {
+//     let lastProductId = await '';
+//     await csvData.map(async (csv: any, index: number) => {
+//       const user = await User.findOne({ email: csv.creator_email });
+//       // if (!user) return sendError(req, res, 400, 'There is no user with this email.');
+//       // if (user?.status !== USER_STATUS.ACTIVATE)
+//       //   return sendError(req, res, 400, 'Your account has not been activated yet.');
+//       const total_products = await Product.count({ user_id: user?._id });
+//       const prefix = user?.username.substring(0, 4).toUpperCase();
+//       const suffix = getSKUSuffix(total_products);
+//       const sku = prefix + '-' + suffix;
+//       const status = (await (total_products > 5))
+//         ? PRODUCT_STATUS.PUBLISHED
+//         : PRODUCT_STATUS.DRAFTS;
+//       const image =
+//         'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+
+//       let product: any | null = await null;
+//       if (index == 0) {
+//         product = await Product.create({
+//           user_id: user?._id,
+//           product_name: csv.product_name,
+//           description: csv.description,
+//           sku,
+//           status,
+//           image,
+//         });
+//         // if (product && product._id) {
+//         lastProductId = await product._id.toString();
+//         // }
+//       } else {
+//         console.log('last => ', lastProductId);
+//         product = await Product.create({
+//           user_id: user?._id,
+//           product_name: csv.product_name,
+//           description: csv.description,
+//           sku,
+//           status,
+//           image,
+//           submission_id: lastProductId ? lastProductId : undefined,
+//         });
+//         // if (product && product._id) {
+//         lastProductId = await product._id.toString();
+//         // }
+//       }
+
+//       const type = await Type.findOne({ value: csvData.type_value });
+//       // if (!type) return sendError(req, res, 400, 'There is no type with this value.');
+//       const crops = await Crop.find({ type_id: type?._id });
+
+//       if (total_products > 4) {
+//         await crops.map((crop: any, index) => {
+//           product.cropList.push({ crop: crop._id, active: true });
+//         });
+//       } else {
+//         await crops.map((crop: any, index) => {
+//           product.cropList.push({ crop: crop._id, active: false });
+//         });
+//       }
+
+//       await product.category.push({ type: type?._id });
+//       await product.save();
+//     });
+
+//     return res.json({ success: true });
+//   } catch (err) {
+//     log('error', 'err:', err);
+//     return sendError(req, res, 400, 'Invalid product data');
+//   }
+// };
+
+const addProductBunch = async (req: Request, res: Response) => {
+  console.log(req.files);
+  const { csvData } = req.body;
+
+  // const files = req.files as Express.Multer.File[];
+  // console.log(files);
+
+  try {
+    let lastProductId: string | undefined = undefined;
+    for (let index = 0; index < csvData.length; index++) {
+      const csv = csvData[index];
+      const user = await User.findOne({ email: csv.creator_email });
+      // if (!user) return sendError(req, res, 400, 'There is no user with this email.');
+      // if (user?.status !== USER_STATUS.ACTIVATE)
+      //   return sendError(req, res, 400, 'Your account has not been activated yet.');
+      const total_products = await Product.count({ user_id: user?._id });
+      const prefix = user?.username.substring(0, 4).toUpperCase();
+      const suffix = getSKUSuffix(total_products);
+      const sku = prefix + '-' + suffix;
+      const status = total_products > 5 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
+      const image =
+        'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+
+      let product: any | null = null;
+      if (index == 0) {
+        product = await Product.create({
+          user_id: user?._id,
+          product_name: csv.product_name,
+          description: csv.description,
+          sku,
+          status,
+          image,
+        });
+        if (product && product._id) {
+          lastProductId = product._id.toString();
+        }
+      } else {
+        console.log('last => ', lastProductId);
+        product = await Product.create({
+          user_id: user?._id,
+          product_name: csv.product_name,
+          description: csv.description,
+          sku,
+          status,
+          image,
+          submission_id: lastProductId ? lastProductId : undefined,
+        });
+        if (product && product._id) {
+          lastProductId = product._id.toString();
+        }
+      }
+
+      const type = await Type.findOne({ value: csvData[index].type_value });
+      // if (!type) return sendError(req, res, 400, 'There is no type with this value.');
+      const crops = await Crop.find({ type_id: type?._id });
+
+      const cropList = crops.map((crop: any) => ({
+        crop: crop._id,
+        active: total_products > 4,
+      }));
+
+      product.cropList = cropList;
+      product.category.push({ type: type?._id });
+
+      await product.save();
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid product data');
+  }
+};
+
+const addCSVProduct = async (req: Request, res: Response) => {
+  const { product_name, description, creator_email, type_value, fileName } = req.body;
+  const number = parseInt(req.body.number);
+
+  const files = req.files as Express.Multer.File[];
+  console.log(product_name);
+  console.log(fileName);
+  console.log(number);
+  console.log(files[0]);
+
+  try {
+    const user = await User.findOne({ email: creator_email });
+    const total_products = await Product.count({ user_id: user?._id });
+    const prefix = user?.username.substring(0, 4).toUpperCase();
+    const suffix = getSKUSuffix(total_products);
+    const sku = prefix + '-' + suffix;
+    const status = total_products > 5 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
+    const image =
+      'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    // const image = await uploadFile(files[0], user?.username || '');
+    const product = await Product.create({
+      user_id: user?._id,
+      product_name,
+      description,
+      sku,
+      status,
+      image,
+    });
+    const type = await Type.findOne({ value: type_value });
+    const crops = await Crop.find({ type_id: type?._id });
+
+    const cropList = crops.map((crop: any) => ({
+      crop: crop._id,
+      active: total_products > 4,
+    }));
+
+    product.cropList = cropList;
+    product.category.push({ type: type?._id });
+    product.importFileName = fileName;
+    product.rowNumber = number;
+
+    await product.save();
+
+    return res.json({ success: true });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid product data');
+  }
+};
+
+const arrangeCSVProducts = async (req: Request, res: Response) => {
+  const { fileName } = req.body;
+  console.log(fileName);
+
+  try {
+    const products = await Product.find({ importFileName: fileName });
+    console.log(products.length);
+    await products.map(async (product: any, index) => {
+      if (product.rowNumber != 1) {
+        const lastProduct = await Product.findOne({
+          importFileName: fileName,
+          rowNumber: product.rowNumber - 1,
+        });
+        product.submission_id = await lastProduct?._id;
+        await product.save();
+      }
+    });
+    return res.json({ success: true });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid product data');
+  }
+};
+
 const addProduct = async (req: Request, res: Response) => {
   const { user_id, product_name, category, description, submission_id } = req.body;
   const files = req.files as Express.Multer.File[];
@@ -577,6 +803,9 @@ export default {
   getProductsCount,
   getProductsCountByUser,
   addProduct,
+  addProductBunch,
+  addCSVProduct,
+  arrangeCSVProducts,
   updateProductByCreator,
   updateTypeCrops,
   deleteProduct,

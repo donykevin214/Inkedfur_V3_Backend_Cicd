@@ -101,6 +101,42 @@ module.exports = {
       },
     },
     {
+      path: '/addProductBunch',
+      methods: {
+        post: {
+          middlewares: [
+            // validate({ schema: schema.addProduct } as validateProps),
+            // isAuthenticated,
+            productCtrls.addProductBunch,
+          ],
+        },
+      },
+    },
+    {
+      path: '/addCSVProduct',
+      methods: {
+        post: {
+          middlewares: [
+            // validate({ schema: schema.addProduct } as validateProps),
+            // isAuthenticated,
+            productCtrls.addCSVProduct,
+          ],
+        },
+      },
+    },
+    {
+      path: '/arrangeCSVProducts',
+      methods: {
+        post: {
+          middlewares: [
+            // validate({ schema: schema.addProduct } as validateProps),
+            isAuthenticated,
+            productCtrls.arrangeCSVProducts,
+          ],
+        },
+      },
+    },
+    {
       path: '/updateTypeCrops',
       methods: {
         post: {
