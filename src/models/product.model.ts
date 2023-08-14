@@ -21,6 +21,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    displayImage: {
+      type: String,
+      default: '',
+    },
     physical_price: {
       type: Number,
       default: 0,
@@ -59,6 +63,25 @@ const productSchema = new mongoose.Schema(
     rowNumber: {
       type: Number,
     },
+    slug: {
+      type: String,
+      default: '',
+    },
+    rating_key: {
+      type: String,
+      default: '',
+    },
+    tags: {
+      type: String,
+      default: '',
+    },
+
+    categories: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+      },
+    ],
     category: [
       {
         type: {

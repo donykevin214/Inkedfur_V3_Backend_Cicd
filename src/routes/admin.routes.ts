@@ -63,6 +63,14 @@ module.exports = {
       },
     },
     {
+      path: '/updateSubmission',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, isAdmin, adminCtrls.updateSubmission],
+        },
+      },
+    },
+    {
       path: '/getSubDetail',
       methods: {
         post: {

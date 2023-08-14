@@ -128,6 +128,7 @@ const getProductById = async (req: Request, res: Response) => {
     const product = await Product.findById(id)
       .populate('user_id', ['username', 'profile_img'])
       .populate('category.type', 'name')
+      .populate('categories', ['category_name', 'children'])
       .populate({
         path: 'cropList.crop',
         populate: {
@@ -528,7 +529,10 @@ const addCSVProduct = async (req: Request, res: Response) => {
     const status = total_products > 5 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
     const image =
       'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const displayImage =
+      'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     // const image = await uploadFile(files[0], user?.username || '');
+    // const displayImage = await uploadFile(files[0], user?.username || '');
     const product = await Product.create({
       user_id: user?._id,
       product_name,
@@ -536,6 +540,7 @@ const addCSVProduct = async (req: Request, res: Response) => {
       sku,
       status,
       image,
+      displayImage,
     });
     const type = await Type.findOne({ value: type_value });
     const crops = await Crop.find({ type_id: type?._id });
@@ -568,11 +573,11 @@ const arrangeCSVProducts = async (req: Request, res: Response) => {
     console.log(products.length);
     await products.map(async (product: any, index) => {
       if (product.rowNumber != 1) {
-        const lastProduct = await Product.findOne({
+        const parentProduct = await Product.findOne({
           importFileName: fileName,
-          rowNumber: product.rowNumber - 1,
+          rowNumber: 1,
         });
-        product.submission_id = await lastProduct?._id;
+        product.submission_id = await parentProduct?._id;
         await product.save();
       }
     });
@@ -596,8 +601,12 @@ const addProduct = async (req: Request, res: Response) => {
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
-    const image = await uploadFile(files[0], user?.username || '');
-    // const image = await '';
+    // const image = await uploadFile(files[0], user?.username || '');
+    // const displayImage = await uploadFile(files[0], user?.username || '');
+    const image =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const displayImage =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     let status: string = await '';
     if (total_products > 4) {
       status = await PRODUCT_STATUS.PUBLISHED;
@@ -612,6 +621,7 @@ const addProduct = async (req: Request, res: Response) => {
         sku,
         status,
         image,
+        displayImage,
         submission_id,
       });
       const crops = await Crop.find({ type_id: category });
@@ -638,6 +648,7 @@ const addProduct = async (req: Request, res: Response) => {
         sku,
         status,
         image,
+        displayImage,
         // submission_id: submission._id,
       });
       const crops = await Crop.find({ type_id: category });

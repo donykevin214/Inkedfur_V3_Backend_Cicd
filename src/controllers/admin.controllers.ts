@@ -201,6 +201,7 @@ const getSubDetail = async (req: Request, res: Response) => {
     await Product.findById(sub_id)
       .populate('user_id', ['username', 'profile_img'])
       .populate('category.type', 'name')
+      .populate('categories', ['category_name', 'children'])
       .populate({
         path: 'cropList.crop',
         populate: {
@@ -239,12 +240,13 @@ const clearAsset = async (req: Request, res: Response) => {
 const resizeImage = async (req: Request, res: Response) => {
   const { sub_id, username } = req.body;
   const files = req.files as Express.Multer.File[];
+  console.log('asd');
 
   try {
     const image = await uploadFile(files[0], username);
     const submission = await Product.findById(sub_id);
     if (submission) {
-      submission.image = await image;
+      submission.displayImage = await image;
       await submission?.save();
     }
 
@@ -278,6 +280,40 @@ const getSubCropsByType = async (req: Request, res: Response) => {
       });
 
     // return res.json({ success: true, submission });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
+const updateSubmission = async (req: Request, res: Response) => {
+  const { sub_id, sku, slug, product_name, tags, rating_key, description, categories } = req.body;
+
+  try {
+    await Product.updateOne(
+      { _id: sub_id },
+      {
+        $set: {
+          sku,
+          slug,
+          product_name,
+          tags,
+          rating_key,
+          description,
+          categories,
+        },
+      },
+    );
+    // product?.sku = await sku;
+    // product?.slug = await slug;
+    // product?.tags = await tags;
+    // product?.rating_key = await rating_key;
+    // product?.product_name = await product_name;
+    // product?.description = await description;
+
+    // await product?.save();
+
+    return res.json({ success: true });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid admin data:');
@@ -641,4 +677,5 @@ export default {
   addAgreement,
   getAllOrder,
   getTotalStatistic,
+  updateSubmission,
 };
