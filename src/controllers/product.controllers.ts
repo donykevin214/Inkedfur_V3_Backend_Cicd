@@ -292,7 +292,8 @@ const uploadPortfolioImage = async (req: Request, res: Response) => {
       const suffix = getSKUSuffix(total_products);
       const sku = prefix + '-' + suffix;
       const image = await uploadFile(files[i], user?.username || '');
-      await Product.create({
+      const type = await Type.findOne({ name: 'Prints' });
+      const product = await Product.create({
         user_id,
         sku,
         status: PRODUCT_STATUS.DRAFTS,
@@ -301,6 +302,8 @@ const uploadPortfolioImage = async (req: Request, res: Response) => {
         store_id,
       });
       await Submission.create({ user_id });
+      await product.category.push({ type: type?._id });
+      await product.save();
     }
     return res.json({ success: true });
   } catch (err) {
