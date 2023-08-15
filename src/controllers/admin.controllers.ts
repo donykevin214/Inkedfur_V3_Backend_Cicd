@@ -155,7 +155,6 @@ const getSubmission = async (req: Request, res: Response) => {
   const { skip, index, creator_id, sortType, OrderType, childType, search, status } = req.body;
 
   try {
-    console.log('asfddd');
     const sortOptions: any = {};
     sortOptions[sortType] = OrderType === 'asc' ? 1 : -1;
     const regexQuery = new RegExp(search, 'i');
@@ -195,8 +194,6 @@ const getSubDetail = async (req: Request, res: Response) => {
       submission_id: sub_id,
       status: PRODUCT_STATUS.PUBLISHED,
     });
-
-    console.log(children);
 
     await Product.findById(sub_id)
       .populate('user_id', ['username', 'profile_img'])
@@ -322,6 +319,7 @@ const updateSubmission = async (req: Request, res: Response) => {
 
 const createSubCropsByType = async (req: Request, res: Response) => {
   const { sub_id, type_id, checks } = req.body;
+  console.log(checks);
 
   try {
     const product = await Product.findById(sub_id);
@@ -396,7 +394,6 @@ const approveSubmission = async (req: Request, res: Response) => {
 
 const getCropsByType = async (req: Request, res: Response) => {
   const { type_id } = req.body;
-  console.log('asf');
 
   try {
     Crop.find({ type_id })
@@ -405,6 +402,7 @@ const getCropsByType = async (req: Request, res: Response) => {
         model: 'Typesize',
       })
       .then(async (crops) => {
+        console.log(crops);
         await res.json({ success: true, creatingCrops: crops });
       });
   } catch (err) {

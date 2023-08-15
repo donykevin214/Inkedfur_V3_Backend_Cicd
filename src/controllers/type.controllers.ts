@@ -244,6 +244,26 @@ const classifyCrop = (size: string) => {
   } else return 'others';
 };
 
+const classifyArtCrop = (size: string) => {
+  const crop1 = ['Magazine', 'Brochure', 'Paperback'];
+
+  if (crop1.includes(size)) return '10:13';
+};
+
+const classifyTSCrop = (size: string) => {
+  const crop1 = ['Small', 'Medium', 'Large', 'X-Large', '2X-Large', '3X-Large'];
+
+  if (crop1.includes(size)) return '7:9';
+};
+
+const classifyComicsCrop = (size: string) => {
+  const crop1 = 'US Current Size';
+  const crop2 = 'Magazine-Size Comic';
+
+  if (size == crop1) return '9:14';
+  if (size == crop2) return '10:13';
+};
+
 const addNewSize = async (req: Request, res: Response) => {
   console.log(req.body);
   const { type_id, sku_suffix, label, weight, price, size, royalty, other_fields } = req.body;
@@ -272,13 +292,34 @@ const addNewSize = async (req: Request, res: Response) => {
 
     const cropCount = await Crop.count({ type_id });
     if (cropCount == 0) {
-      await Crop.create({ name: '16:9', type_id });
-      await Crop.create({ name: '4:3', type_id });
-      await Crop.create({ name: '27:11', type_id });
-      await Crop.create({ name: 'others', type_id });
+      if (type?.name == 'Prints') {
+        await Crop.create({ name: '16:9', type_id });
+        await Crop.create({ name: '4:3', type_id });
+        await Crop.create({ name: '27:11', type_id });
+        await Crop.create({ name: 'others', type_id });
+      } else if (type?.name == 'T-Shirt') {
+        await Crop.create({ name: '7:9', type_id });
+      } else if (type?.name == 'Art Works') {
+        await Crop.create({ name: '10:13', type_id });
+      } else if (type?.name == 'Comics') {
+        await Crop.create({ name: '9:14', type_id });
+        await Crop.create({ name: '10:13', type_id });
+      }
     }
 
-    const cropName = await classifyCrop(size);
+    let cropName = '';
+
+    if (type?.name === 'Prints') {
+      cropName = await classifyCrop(size);
+    } else if (type?.name === 'T-Shirt') {
+      cropName = await classifyTSCrop(size);
+    } else if (type?.name === 'Art Works') {
+      cropName = await classifyArtCrop(size);
+    } else if (type?.name === 'Comics') {
+      cropName = await classifyComicsCrop(size);
+    }
+    // cropName = await classifyCrop(size);
+
     const crop = await Crop.findOne({ name: cropName, type_id });
     await crop?.sizeList.push({ size: result._id });
     await crop?.save();

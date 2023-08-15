@@ -454,11 +454,14 @@ const addProductBunch = async (req: Request, res: Response) => {
       // if (!user) return sendError(req, res, 400, 'There is no user with this email.');
       // if (user?.status !== USER_STATUS.ACTIVATE)
       //   return sendError(req, res, 400, 'Your account has not been activated yet.');
-      const total_products = await Product.count({ user_id: user?._id });
+      const total_products = await Product.count({
+        user_id: user?._id,
+        status: PRODUCT_STATUS.PUBLISHED,
+      });
       const prefix = user?.username.substring(0, 4).toUpperCase();
       const suffix = getSKUSuffix(total_products);
       const sku = prefix + '-' + suffix;
-      const status = total_products > 5 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
+      const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
       const image =
         'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
 
@@ -525,11 +528,14 @@ const addCSVProduct = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findOne({ email: creator_email });
-    const total_products = await Product.count({ user_id: user?._id });
+    const total_products = await Product.count({
+      user_id: user?._id,
+      status: PRODUCT_STATUS.PUBLISHED,
+    });
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
-    const status = total_products > 5 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
+    const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
     const image =
       'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     const displayImage =
