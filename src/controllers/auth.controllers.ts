@@ -78,7 +78,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       code,
       type: VERIFY_CODE_TYPES.VALIDATE_EMAIL,
     });
-    // await mailGun(email.toLowerCase(), 'Activate your account', template);
+    await mailGun(email.toLowerCase(), 'Activate your account', template);
 
     if (roles === Roles.CREATOR) {
       return next();
@@ -346,7 +346,7 @@ const resendVerificationCode = async (req: Request, res: Response) => {
       title: options.title,
       code: verifyCode.code,
     });
-    // await mailGun(email.toLowerCase(), options.title, template);
+    await mailGun(email.toLowerCase(), options.title, template);
 
     return res.json({ success: true });
   } catch (err) {
@@ -520,7 +520,7 @@ const changePassword = async (req: Request, res: Response) => {
       title: 'Password changed',
     });
 
-    // await mailGun(user.email, 'Password changed Successfully', template);
+    await mailGun(user.email, 'Password changed Successfully', template);
 
     return res.status(200).json({
       success: true,
@@ -545,7 +545,7 @@ const updatePassword = async (req: Request, res: Response) => {
       title: 'Password Reset Successfully',
     });
 
-    // await mailGun(email.toLowerCase(), 'Password Reset Successfully', template);
+    await mailGun(email.toLowerCase(), 'Password Reset Successfully', template);
 
     return res.status(200).json({ success: true });
   } catch (err) {

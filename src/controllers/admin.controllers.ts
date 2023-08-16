@@ -191,8 +191,7 @@ const getSubDetail = async (req: Request, res: Response) => {
   try {
     // const submission = await Product.findById(sub_id);
     const children = await Product.find({
-      submission_id: sub_id,
-      status: PRODUCT_STATUS.PUBLISHED,
+      submission_id: sub_id
     });
 
     await Product.findById(sub_id)

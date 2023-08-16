@@ -292,12 +292,14 @@ const uploadPortfolioImage = async (req: Request, res: Response) => {
       const suffix = getSKUSuffix(total_products);
       const sku = prefix + '-' + suffix;
       const image = await uploadFile(files[i], user?.username || '');
+      const displayImage = await uploadFile(files[i], user?.username || '');
       const type = await Type.findOne({ name: 'Prints' });
       const product = await Product.create({
         user_id,
         sku,
         status: PRODUCT_STATUS.DRAFTS,
         image,
+        displayImage,
         product_name: sku,
         store_id,
       });
@@ -443,8 +445,7 @@ const addProductBunch = async (req: Request, res: Response) => {
   console.log(req.files);
   const { csvData } = req.body;
 
-  // const files = req.files as Express.Multer.File[];
-  // console.log(files);
+  const files = req.files as Express.Multer.File[];
 
   try {
     let lastProductId: string | undefined = undefined;
@@ -462,9 +463,15 @@ const addProductBunch = async (req: Request, res: Response) => {
       const suffix = getSKUSuffix(total_products);
       const sku = prefix + '-' + suffix;
       const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
-      const image =
-        'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+      let image;
+      let displayImage;
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].filename === csv.product_name) {
+          image = uploadFile(files[i], '');
+          displayImage = uploadFile(files[i], '');
+        }
 
+      }
       let product: any | null = null;
       if (index == 0) {
         product = await Product.create({
@@ -474,6 +481,7 @@ const addProductBunch = async (req: Request, res: Response) => {
           sku,
           status,
           image,
+          displayImage
         });
         if (product && product._id) {
           lastProductId = product._id.toString();
@@ -487,6 +495,7 @@ const addProductBunch = async (req: Request, res: Response) => {
           sku,
           status,
           image,
+          displayImage,
           submission_id: lastProductId ? lastProductId : undefined,
         });
         if (product && product._id) {
@@ -521,25 +530,16 @@ const addCSVProduct = async (req: Request, res: Response) => {
   const number = parseInt(req.body.number);
 
   const files = req.files as Express.Multer.File[];
-  console.log(product_name);
-  console.log(fileName);
-  console.log(number);
-  console.log(files[0]);
 
   try {
     const user = await User.findOne({ email: creator_email });
     const total_products = await Product.count({
       user_id: user?._id,
-      status: PRODUCT_STATUS.PUBLISHED,
     });
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
     const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
-    // const image =
-    //   'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-    // const displayImage =
-    //   'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     const image = await uploadFile(files[0], user?.username || '');
     const displayImage = await uploadFile(files[0], user?.username || '');
     const product = await Product.create({
@@ -586,6 +586,7 @@ const arrangeCSVProducts = async (req: Request, res: Response) => {
           importFileName: fileName,
           rowNumber: 1,
         });
+        console.log(parentProduct?._id)
         product.submission_id = await parentProduct?._id;
         await product.save();
       }
@@ -783,16 +784,19 @@ const updateTypeCrops = async (req: Request, res: Response) => {
         },
       })
       .then(async (product) => {
-        await product?.cropList.map((cropItem: any) => {
+        product?.cropList.map((cropItem: any) => {
           Object.keys(checks).map((item: string) => {
             if (cropItem._id == item && cropItem.crop.type_id == type_id) {
               cropItem.active = checks[item];
             }
           });
         });
-        product.status = await 'PENDING_REVIEW';
-        await product?.save();
-        await res.json({ success: true });
+        if (product) {
+          product.status = 'PENDING_REVIEW';
+          await product.save();
+        }
+
+        return res.json({ success: true });
       });
   } catch (err) {
     log('error', 'err:', err);
