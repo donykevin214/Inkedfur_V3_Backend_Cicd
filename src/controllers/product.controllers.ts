@@ -536,12 +536,12 @@ const addCSVProduct = async (req: Request, res: Response) => {
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
     const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
-    const image =
-      'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-    const displayImage =
-      'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-    // const image = await uploadFile(files[0], user?.username || '');
-    // const displayImage = await uploadFile(files[0], user?.username || '');
+    // const image =
+    //   'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    // const displayImage =
+    //   'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const image = await uploadFile(files[0], user?.username || '');
+    const displayImage = await uploadFile(files[0], user?.username || '');
     const product = await Product.create({
       user_id: user?._id,
       product_name,
@@ -610,12 +610,12 @@ const addProduct = async (req: Request, res: Response) => {
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
-    // const image = await uploadFile(files[0], user?.username || '');
-    // const displayImage = await uploadFile(files[0], user?.username || '');
-    const image =
-      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-    const displayImage =
-      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const image = await uploadFile(files[0], user?.username || '');
+    const displayImage = await uploadFile(files[0], user?.username || '');
+    // const image =
+    //   await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    // const displayImage =
+    //   await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     let status: string = await '';
     if (total_products > 4) {
       status = await PRODUCT_STATUS.PUBLISHED;

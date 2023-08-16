@@ -224,6 +224,7 @@ const clearAsset = async (req: Request, res: Response) => {
     const submission = await Product.findById(sub_id);
     if (submission) {
       submission.image = await '';
+      submission.displayImage = await '';
       await submission?.save();
     }
 
