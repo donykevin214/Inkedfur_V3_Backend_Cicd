@@ -191,7 +191,7 @@ const getSubDetail = async (req: Request, res: Response) => {
   try {
     // const submission = await Product.findById(sub_id);
     const children = await Product.find({
-      submission_id: sub_id
+      submission_id: sub_id,
     });
 
     await Product.findById(sub_id)
@@ -210,6 +210,44 @@ const getSubDetail = async (req: Request, res: Response) => {
       });
 
     // return res.json({ success: true, submission });
+  } catch (err) {
+    log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid admin data:');
+  }
+};
+
+const integratedSearch = async (req: Request, res: Response) => {
+  const { searchText } = req.body;
+
+  try {
+    const regexQuery = new RegExp(searchText, 'i');
+
+    const product = await Product.find({}).or([
+      { product_name: { $regex: regexQuery } },
+      { description: { $regex: regexQuery } },
+      { tags: { $regex: regexQuery } },
+      { sku: { $regex: regexQuery } },
+    ]);
+
+    const user = await User.find({ roles: Roles.CREATOR }).or([
+      { username: { $regex: regexQuery } },
+      { description: { $regex: regexQuery } },
+      { email: { $regex: regexQuery } },
+    ]);
+
+    const agreement = await Agreement.find({}).or([
+      { name: { $regex: regexQuery } },
+      { content: { $regex: regexQuery } },
+      { slug: { $regex: regexQuery } },
+    ]);
+
+    const result = {
+      user,
+      product,
+      agreement,
+    };
+
+    return res.json({ success: true, result });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid admin data:');
@@ -676,4 +714,5 @@ export default {
   getAllOrder,
   getTotalStatistic,
   updateSubmission,
+  integratedSearch,
 };

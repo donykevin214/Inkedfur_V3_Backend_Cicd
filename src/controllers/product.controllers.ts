@@ -76,12 +76,25 @@ const getProductsCount = async (req: Request, res: Response) => {
         },
       },
       {
+        $lookup: {
+          from: 'types',
+          localField: 'category.type',
+          foreignField: '_id',
+          as: 'category.type',
+        },
+      },
+      {
+        $unwind: '$category.type',
+      },
+      {
         $group: {
-          _id: '$category',
+          _id: '$category.type.name',
           count: { $sum: 1 },
         },
       },
     ]);
+
+    console.log(products);
 
     return res.json({ success: true, products });
   } catch (err) {
@@ -145,8 +158,9 @@ const getProductById = async (req: Request, res: Response) => {
       status: PRODUCT_STATUS.PUBLISHED,
     });
     const relatedProducts = await Product.find({
-      category: product.category,
+      'category.type': product.category[0].type?._id,
       status: PRODUCT_STATUS.PUBLISHED,
+      _id: { $ne: product._id },
     }).limit(10);
     return res.json({
       success: true,
@@ -163,6 +177,7 @@ const getProductById = async (req: Request, res: Response) => {
 
 const getProductByCategory = async (req: Request, res: Response) => {
   const { category, skip, index } = req.body;
+  console.log(category);
   try {
     let product;
     let totalCount;
@@ -170,24 +185,41 @@ const getProductByCategory = async (req: Request, res: Response) => {
       product = await Product.find({ status: PRODUCT_STATUS.PUBLISHED })
         .limit(skip)
         .skip((index - 1) * skip)
-        .sort('updateAt');
+        .sort('updatedAt');
       totalCount = await Product.count({ status: PRODUCT_STATUS.PUBLISHED });
     } else {
+      const typeList = await Promise.all(
+        category.map((item: string) => {
+          return Type.findOne({ value: item }).then((type) => {
+            return type?._id;
+          });
+        }),
+      );
       product = await Product.find({
-        category: { $in: category },
+        category: { $elemMatch: { type: { $in: typeList } } },
         status: PRODUCT_STATUS.PUBLISHED,
       })
         .limit(skip)
         .skip((index - 1) * skip)
-        .sort('updateAt');
+        .sort('updatedAt');
       totalCount = await Product.count({
-        category: { $in: category },
+        category: { $elemMatch: { type: { $in: typeList } } },
         status: PRODUCT_STATUS.PUBLISHED,
       });
     }
     return res.json({ success: true, product, totalCount });
   } catch (err) {
-    log('error', 'err:', err);
+    console.log('error', 'err:', err);
+    return sendError(req, res, 400, 'Invalid product data');
+  }
+};
+
+const getAllProduct = async (req: Request, res: Response) => {
+  try {
+    const products = await Product.find({ status: PRODUCT_STATUS.PUBLISHED });
+    return res.json({ success: true, products });
+  } catch (err) {
+    console.log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid product data');
   }
 };
@@ -365,166 +397,6 @@ const addMultiProducts = async (req: Request, res: Response) => {
   }
 };
 
-// const addProductBunch = async (req: Request, res: Response) => {
-//   console.log(req.body);
-//   const { csvData } = req.body;
-//   // const files = req.files as Express.Multer.File[];
-
-//   try {
-//     let lastProductId = await '';
-//     await csvData.map(async (csv: any, index: number) => {
-//       const user = await User.findOne({ email: csv.creator_email });
-//       // if (!user) return sendError(req, res, 400, 'There is no user with this email.');
-//       // if (user?.status !== USER_STATUS.ACTIVATE)
-//       //   return sendError(req, res, 400, 'Your account has not been activated yet.');
-//       const total_products = await Product.count({ user_id: user?._id });
-//       const prefix = user?.username.substring(0, 4).toUpperCase();
-//       const suffix = getSKUSuffix(total_products);
-//       const sku = prefix + '-' + suffix;
-//       const status = (await (total_products > 5))
-//         ? PRODUCT_STATUS.PUBLISHED
-//         : PRODUCT_STATUS.DRAFTS;
-//       const image =
-//         'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-
-//       let product: any | null = await null;
-//       if (index == 0) {
-//         product = await Product.create({
-//           user_id: user?._id,
-//           product_name: csv.product_name,
-//           description: csv.description,
-//           sku,
-//           status,
-//           image,
-//         });
-//         // if (product && product._id) {
-//         lastProductId = await product._id.toString();
-//         // }
-//       } else {
-//         console.log('last => ', lastProductId);
-//         product = await Product.create({
-//           user_id: user?._id,
-//           product_name: csv.product_name,
-//           description: csv.description,
-//           sku,
-//           status,
-//           image,
-//           submission_id: lastProductId ? lastProductId : undefined,
-//         });
-//         // if (product && product._id) {
-//         lastProductId = await product._id.toString();
-//         // }
-//       }
-
-//       const type = await Type.findOne({ value: csvData.type_value });
-//       // if (!type) return sendError(req, res, 400, 'There is no type with this value.');
-//       const crops = await Crop.find({ type_id: type?._id });
-
-//       if (total_products > 4) {
-//         await crops.map((crop: any, index) => {
-//           product.cropList.push({ crop: crop._id, active: true });
-//         });
-//       } else {
-//         await crops.map((crop: any, index) => {
-//           product.cropList.push({ crop: crop._id, active: false });
-//         });
-//       }
-
-//       await product.category.push({ type: type?._id });
-//       await product.save();
-//     });
-
-//     return res.json({ success: true });
-//   } catch (err) {
-//     log('error', 'err:', err);
-//     return sendError(req, res, 400, 'Invalid product data');
-//   }
-// };
-
-const addProductBunch = async (req: Request, res: Response) => {
-  console.log(req.files);
-  const { csvData } = req.body;
-
-  const files = req.files as Express.Multer.File[];
-
-  try {
-    let lastProductId: string | undefined = undefined;
-    for (let index = 0; index < csvData.length; index++) {
-      const csv = csvData[index];
-      const user = await User.findOne({ email: csv.creator_email });
-      // if (!user) return sendError(req, res, 400, 'There is no user with this email.');
-      // if (user?.status !== USER_STATUS.ACTIVATE)
-      //   return sendError(req, res, 400, 'Your account has not been activated yet.');
-      const total_products = await Product.count({
-        user_id: user?._id,
-        status: PRODUCT_STATUS.PUBLISHED,
-      });
-      const prefix = user?.username.substring(0, 4).toUpperCase();
-      const suffix = getSKUSuffix(total_products);
-      const sku = prefix + '-' + suffix;
-      const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
-      let image;
-      let displayImage;
-      for (let i = 0; i < files.length; i++) {
-        if (files[i].filename === csv.product_name) {
-          image = uploadFile(files[i], '');
-          displayImage = uploadFile(files[i], '');
-        }
-
-      }
-      let product: any | null = null;
-      if (index == 0) {
-        product = await Product.create({
-          user_id: user?._id,
-          product_name: csv.product_name,
-          description: csv.description,
-          sku,
-          status,
-          image,
-          displayImage
-        });
-        if (product && product._id) {
-          lastProductId = product._id.toString();
-        }
-      } else {
-        console.log('last => ', lastProductId);
-        product = await Product.create({
-          user_id: user?._id,
-          product_name: csv.product_name,
-          description: csv.description,
-          sku,
-          status,
-          image,
-          displayImage,
-          submission_id: lastProductId ? lastProductId : undefined,
-        });
-        if (product && product._id) {
-          lastProductId = product._id.toString();
-        }
-      }
-
-      const type = await Type.findOne({ value: csvData[index].type_value });
-      // if (!type) return sendError(req, res, 400, 'There is no type with this value.');
-      const crops = await Crop.find({ type_id: type?._id });
-
-      const cropList = crops.map((crop: any) => ({
-        crop: crop._id,
-        active: total_products > 4,
-      }));
-
-      product.cropList = cropList;
-      product.category.push({ type: type?._id });
-
-      await product.save();
-    }
-
-    return res.json({ success: true });
-  } catch (err) {
-    log('error', 'err:', err);
-    return sendError(req, res, 400, 'Invalid product data');
-  }
-};
-
 const addCSVProduct = async (req: Request, res: Response) => {
   const { product_name, description, creator_email, type_value, fileName } = req.body;
   const number = parseInt(req.body.number);
@@ -540,8 +412,12 @@ const addCSVProduct = async (req: Request, res: Response) => {
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
     const status = total_products > 4 ? PRODUCT_STATUS.PUBLISHED : PRODUCT_STATUS.DRAFTS;
-    const image = await uploadFile(files[0], user?.username || '');
-    const displayImage = await uploadFile(files[0], user?.username || '');
+    // const image = await uploadFile(files[0], user?.username || '');
+    // const displayImage = await uploadFile(files[0], user?.username || '');
+    const image =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const displayImage =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     const product = await Product.create({
       user_id: user?._id,
       product_name,
@@ -586,7 +462,7 @@ const arrangeCSVProducts = async (req: Request, res: Response) => {
           importFileName: fileName,
           rowNumber: 1,
         });
-        console.log(parentProduct?._id)
+        console.log(parentProduct?._id);
         product.submission_id = await parentProduct?._id;
         await product.save();
       }
@@ -805,15 +681,18 @@ const updateTypeCrops = async (req: Request, res: Response) => {
 };
 
 const deleteProduct = async (req: Request, res: Response) => {
-  const { product_id } = req.body;
+  const { sub_id } = req.body;
   try {
-    const product = await Product.findById(product_id);
+    const product = await Product.findById(sub_id);
 
     if (!product) {
       return res.status(400).json({ success: false, message: 'Product does not exist' });
     }
 
     await product.deleteOne();
+
+    await Product.updateMany({ submission_id: sub_id }, { $set: { submission_id: null } });
+
     return res.json({ success: true });
   } catch (err) {
     log('error', 'err:', err);
@@ -827,7 +706,6 @@ export default {
   getProductsCount,
   getProductsCountByUser,
   addProduct,
-  addProductBunch,
   addCSVProduct,
   arrangeCSVProducts,
   updateProductByCreator,
@@ -835,6 +713,7 @@ export default {
   deleteProduct,
   getProductByUserId,
   getProductByCategory,
+  getAllProduct,
   setProductProperity,
   approveProduct,
   cropProduct,

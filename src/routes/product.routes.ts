@@ -18,6 +18,14 @@ module.exports = {
       },
     },
     {
+      path: '/getAllProduct',
+      methods: {
+        get: {
+          middlewares: [productCtrls.getAllProduct],
+        },
+      },
+    },
+    {
       path: '/getProductsCount',
       methods: {
         get: {
@@ -101,13 +109,13 @@ module.exports = {
       },
     },
     {
-      path: '/addProductBunch',
+      path: '/deleteProduct',
       methods: {
         post: {
           middlewares: [
             // validate({ schema: schema.addProduct } as validateProps),
-            // isAuthenticated,
-            productCtrls.addProductBunch,
+            isAuthenticated,
+            productCtrls.deleteProduct,
           ],
         },
       },

@@ -71,6 +71,14 @@ module.exports = {
       },
     },
     {
+      path: '/integratedSearch',
+      methods: {
+        post: {
+          middlewares: [adminCtrls.integratedSearch],
+        },
+      },
+    },
+    {
       path: '/getSubDetail',
       methods: {
         post: {

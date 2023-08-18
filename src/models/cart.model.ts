@@ -18,6 +18,16 @@ const cartSchema = new mongoose.Schema(
       default: 1,
       required: true,
     },
+    type_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Type',
+      required: true,
+    },
+    size_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Typesize',
+      required: true,
+    },
     product_sell_type: {
       type: String,
       enum: Object.values(PRODUCT_SELL_TYPE),
@@ -31,7 +41,7 @@ const cartSchema = new mongoose.Schema(
     tip: {
       type: Number,
       default: 0,
-    }
+    },
   },
   { timestamps: true },
 );
