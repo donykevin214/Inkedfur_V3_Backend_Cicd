@@ -93,6 +93,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 const createStore = async (req: Request, res: Response) => {
   const { email, store_name, description, status, content_category } = req.body;
+  console.log(content_category);
+
   try {
     const user = await User.findOne({
       email: email.toLowerCase(),

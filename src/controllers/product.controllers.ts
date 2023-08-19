@@ -319,8 +319,12 @@ const uploadPortfolioImage = async (req: Request, res: Response) => {
       const prefix = user?.username.substring(0, 4).toUpperCase();
       const suffix = getSKUSuffix(total_products);
       const sku = prefix + '-' + suffix;
-      const image = await uploadFile(files[i], user?.username || '');
-      const displayImage = await uploadFile(files[i], user?.username || '');
+      // const image = await uploadFile(files[i], user?.username || '');
+      // const displayImage = await uploadFile(files[i], user?.username || '');
+      const image =
+        await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+      const displayImage =
+        await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
       const type = await Type.findOne({ name: 'Prints' });
       const product = await Product.create({
         user_id,
@@ -331,8 +335,19 @@ const uploadPortfolioImage = async (req: Request, res: Response) => {
         product_name: sku,
         store_id,
       });
+
       await Submission.create({ user_id });
       await product.category.push({ type: type?._id });
+      const crops = await Crop.find({ type_id: type?._id });
+      if (total_products > 4) {
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: true });
+        });
+      } else {
+        await crops.map((crop: any, index) => {
+          product.cropList.push({ crop: crop._id, active: false });
+        });
+      }
       await product.save();
     }
     return res.json({ success: true });
