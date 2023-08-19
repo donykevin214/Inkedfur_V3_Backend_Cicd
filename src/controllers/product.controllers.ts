@@ -94,8 +94,6 @@ const getProductsCount = async (req: Request, res: Response) => {
       },
     ]);
 
-    console.log(products);
-
     return res.json({ success: true, products });
   } catch (err) {
     log('error', 'err:', err);
@@ -136,7 +134,6 @@ const getProductsCountByUser = async (req: Request, res: Response) => {
 
 const getProductById = async (req: Request, res: Response) => {
   const { id } = req.query;
-  console.log(id);
   try {
     const product = await Product.findById(id)
       .populate('user_id', ['username', 'profile_img'])
@@ -177,7 +174,6 @@ const getProductById = async (req: Request, res: Response) => {
 
 const getProductByCategory = async (req: Request, res: Response) => {
   const { category, skip, index } = req.body;
-  console.log(category);
   try {
     let product;
     let totalCount;
@@ -451,18 +447,15 @@ const addCSVProduct = async (req: Request, res: Response) => {
 
 const arrangeCSVProducts = async (req: Request, res: Response) => {
   const { fileName } = req.body;
-  console.log(fileName);
 
   try {
     const products = await Product.find({ importFileName: fileName });
-    console.log(products.length);
     await products.map(async (product: any, index) => {
       if (product.rowNumber != 1) {
         const parentProduct = await Product.findOne({
           importFileName: fileName,
           rowNumber: 1,
         });
-        console.log(parentProduct?._id);
         product.submission_id = await parentProduct?._id;
         await product.save();
       }
@@ -477,7 +470,6 @@ const arrangeCSVProducts = async (req: Request, res: Response) => {
 const addProduct = async (req: Request, res: Response) => {
   const { user_id, product_name, category, description, submission_id } = req.body;
   const files = req.files as Express.Multer.File[];
-  console.log(user_id);
   try {
     const total_products = await Product.count({ user_id, status: PRODUCT_STATUS.PUBLISHED });
     const user = await User.findById(user_id);
@@ -526,7 +518,6 @@ const addProduct = async (req: Request, res: Response) => {
       await product.save();
     } else {
       // const submission = await Submission.create({ user_id });
-      console.log('ddddddddddddddddddddd');
       const product = await Product.create({
         user_id,
         product_name,
@@ -539,7 +530,6 @@ const addProduct = async (req: Request, res: Response) => {
       });
       const crops = await Crop.find({ type_id: category });
       if (total_products > 4) {
-        console.log('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
         await crops.map((crop: any, index) => {
           product.cropList.push({ crop: crop._id, active: true });
         });
@@ -645,10 +635,8 @@ const updateProductByCreator = async (req: Request, res: Response) => {
 
 const updateTypeCrops = async (req: Request, res: Response) => {
   const { sub_id, type_id, checks } = req.body;
-  console.log(checks);
 
   try {
-    console.log(Object.keys(checks));
     Product.findById(sub_id)
       .populate('user_id', ['username', 'profile_img'])
       .populate('category.type', 'name')

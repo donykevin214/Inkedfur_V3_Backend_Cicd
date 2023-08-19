@@ -184,6 +184,7 @@ const addNewOption = async (req: Request, res: Response) => {
 
 const getSize = async (req: Request, res: Response): Promise<Response> => {
   const { type_id } = req.body;
+  console.log(type_id);
   try {
     if (!type_id) {
       return res.status(400).json({ success: false, error: 'type_id is required' });

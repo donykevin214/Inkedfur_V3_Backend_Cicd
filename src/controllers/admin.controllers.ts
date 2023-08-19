@@ -217,7 +217,9 @@ const getSubDetail = async (req: Request, res: Response) => {
 };
 
 const integratedSearch = async (req: Request, res: Response) => {
-  const { searchText } = req.body;
+  console.log(req.body);
+  const { searchText } = req.body.payload;
+  console.log(searchText);
 
   try {
     const regexQuery = new RegExp(searchText, 'i');
@@ -229,7 +231,11 @@ const integratedSearch = async (req: Request, res: Response) => {
       { sku: { $regex: regexQuery } },
     ]);
 
-    const user = await User.find({ roles: Roles.CREATOR }).or([
+    const user = await User.find({
+      roles: Roles.CREATOR,
+      status: USER_STATUS.ACTIVATE,
+      active: true,
+    }).or([
       { username: { $regex: regexQuery } },
       { description: { $regex: regexQuery } },
       { email: { $regex: regexQuery } },
@@ -241,10 +247,62 @@ const integratedSearch = async (req: Request, res: Response) => {
       { slug: { $regex: regexQuery } },
     ]);
 
+    const histories = await Checkout.aggregate([
+      {
+        $match: {
+          $or: [
+            {
+              transactionId: {
+                $regex: searchText,
+                $options: 'i',
+              },
+            },
+            {
+              buyer_email: {
+                $regex: searchText,
+                $options: 'i',
+              },
+            },
+            {
+              buyer_username: {
+                $regex: searchText,
+                $options: 'i',
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'product_id',
+          foreignField: '_id',
+          as: 'products',
+        },
+      },
+      {
+        $unwind: '$products',
+      },
+      {
+        $group: {
+          _id: '$transactionId',
+          data: { $push: '$$ROOT' },
+        },
+      },
+    ]);
+
+    const application = await User.find({
+      roles: Roles.CREATOR,
+      status: USER_STATUS.PENDING,
+      active: true,
+    });
+
     const result = {
       user,
       product,
       agreement,
+      order: histories,
+      application,
     };
 
     return res.json({ success: true, result });
