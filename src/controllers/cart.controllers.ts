@@ -115,64 +115,64 @@ const addCartProduct = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const changeProductQuantity = async (req: Request, res: Response) => {
-  const { cart_id, quantity, product_sell_type, crop_size } = req.body;
-  try {
-    const cartProduct = await Cart.findById(cart_id);
+// const changeProductQuantity = async (req: Request, res: Response) => {
+//   const { cart_id, quantity, product_sell_type, crop_size } = req.body;
+//   try {
+//     const cartProduct = await Cart.findById(cart_id);
 
-    if (!cartProduct) {
-      return sendError(req, res, 400, 'Cart does not exist');
-    }
-    const product = await Product.findById(cartProduct.product_id);
+//     if (!cartProduct) {
+//       return sendError(req, res, 400, 'Cart does not exist');
+//     }
+//     const product = await Product.findById(cartProduct.product_id);
 
-    if (!product) {
-      return sendError(req, res, 400, 'Product does not exist');
-    }
-    if (product.category === 'PRINTS') {
-      const product_crop_object = product.crop_size_list.filter(
-        (crop_list) => crop_list.size === crop_size,
-      );
-      if (product_crop_object) {
-        if (product_crop_object[0].quantity < quantity) {
-          return sendError(
-            req,
-            res,
-            400,
-            `Product quantity should be less than ${product_crop_object[0].quantity}`,
-          );
-        }
-      } else {
-        return sendError(req, res, 400, `Product does not exist`);
-      }
-    } else {
-      if (product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
-        if (product.physical_quantity < quantity) {
-          return sendError(
-            req,
-            res,
-            400,
-            `Product quantity should be less than ${product.physical_quantity}`,
-          );
-        }
-      } else {
-        if (product.digital_quantity < quantity) {
-          return sendError(
-            req,
-            res,
-            400,
-            `Product quantity should be less than ${product.digital_quantity}`,
-          );
-        }
-      }
-    }
-    cartProduct.quantity = quantity;
-    await cartProduct.save();
-    return res.json({ success: true });
-  } catch (err) {
-    log('error', 'err:', err);
-    return sendError(req, res, 400, 'Invalid user data:');
-  }
-};
+//     if (!product) {
+//       return sendError(req, res, 400, 'Product does not exist');
+//     }
+//     if (product.category === 'PRINTS') {
+//       const product_crop_object = product.crop_size_list.filter(
+//         (crop_list) => crop_list.size === crop_size,
+//       );
+//       if (product_crop_object) {
+//         if (product_crop_object[0].quantity < quantity) {
+//           return sendError(
+//             req,
+//             res,
+//             400,
+//             `Product quantity should be less than ${product_crop_object[0].quantity}`,
+//           );
+//         }
+//       } else {
+//         return sendError(req, res, 400, `Product does not exist`);
+//       }
+//     } else {
+//       if (product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
+//         if (product.physical_quantity < quantity) {
+//           return sendError(
+//             req,
+//             res,
+//             400,
+//             `Product quantity should be less than ${product.physical_quantity}`,
+//           );
+//         }
+//       } else {
+//         if (product.digital_quantity < quantity) {
+//           return sendError(
+//             req,
+//             res,
+//             400,
+//             `Product quantity should be less than ${product.digital_quantity}`,
+//           );
+//         }
+//       }
+//     }
+//     cartProduct.quantity = quantity;
+//     await cartProduct.save();
+//     return res.json({ success: true });
+//   } catch (err) {
+//     log('error', 'err:', err);
+//     return sendError(req, res, 400, 'Invalid user data:');
+//   }
+// };
 
 const deleteCartProduct = async (req: Request, res: Response) => {
   const { cart_id } = req.body;
@@ -189,4 +189,9 @@ const deleteCartProduct = async (req: Request, res: Response) => {
   }
 };
 
-export default { getCartProduct, addCartProduct, changeProductQuantity, deleteCartProduct };
+export default {
+  getCartProduct,
+  addCartProduct,
+  // changeProductQuantity,
+  deleteCartProduct,
+};

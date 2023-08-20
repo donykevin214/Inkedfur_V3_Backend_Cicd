@@ -120,33 +120,33 @@ const getPurchaseHistory = async (req: Request, res: Response) => {
   }
 };
 
-const getProductPrice = async (req: Request, res: Response) => {
-  const { product_id, product_sell_type, quantity, crop_size } = req.body;
-  try {
-    const product = await Product.findById(product_id);
-    if (!product) {
-      return sendError(req, res, 400, 'Product does not exist');
-    }
-    let price: number;
-    if (product.category === 'PRINTS') {
-      const product_crop_object = product.crop_size_list.filter(
-        (crop_list) => crop_list.size === crop_size,
-      );
-      product_crop_object ? (price = product_crop_object[0].price) : (price = 0);
-    } else {
-      if (product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
-        price = product.physical_price;
-      } else {
-        price = product.digital_price;
-      }
-    }
-    price = price * quantity;
-    return res.json({ success: true, price });
-  } catch (err) {
-    log('error', 'err:', err);
-    return sendError(req, res, 400, 'Invalid checkout data');
-  }
-};
+// const getProductPrice = async (req: Request, res: Response) => {
+//   const { product_id, product_sell_type, quantity, crop_size } = req.body;
+//   try {
+//     const product = await Product.findById(product_id);
+//     if (!product) {
+//       return sendError(req, res, 400, 'Product does not exist');
+//     }
+//     let price: number;
+//     if (product.category === 'PRINTS') {
+//       const product_crop_object = product.crop_size_list.filter(
+//         (crop_list) => crop_list.size === crop_size,
+//       );
+//       product_crop_object ? (price = product_crop_object[0].price) : (price = 0);
+//     } else {
+//       if (product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
+//         price = product.physical_price;
+//       } else {
+//         price = product.digital_price;
+//       }
+//     }
+//     price = price * quantity;
+//     return res.json({ success: true, price });
+//   } catch (err) {
+//     log('error', 'err:', err);
+//     return sendError(req, res, 400, 'Invalid checkout data');
+//   }
+// };
 
 const addCheckout = async (req: Request, res: Response) => {
   const { products, shipToInfo, shippingInfo, totalPrice, tip, subTotal } = req.body;
@@ -562,7 +562,7 @@ export default {
   addCheckout,
   updateRoyaltyStatus,
   updateCheckoutStatus,
-  getProductPrice,
+  // getProductPrice,
   saveShippingAddress,
   getShippingAddress,
   checkout,

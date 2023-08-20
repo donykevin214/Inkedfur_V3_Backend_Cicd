@@ -30,17 +30,17 @@ module.exports = {
         },
       },
     },
-    {
-      path: '/changeProductQuantity',
-      methods: {
-        post: {
-          middlewares: [
-            validate({ schema: schema.changeCartProductQuantity } as validateProps),
-            cartCtrls.changeProductQuantity,
-          ],
-        },
-      },
-    },
+    // {
+    //   path: '/changeProductQuantity',
+    //   methods: {
+    //     post: {
+    //       middlewares: [
+    //         validate({ schema: schema.changeCartProductQuantity } as validateProps),
+    //         cartCtrls.changeProductQuantity,
+    //       ],
+    //     },
+    //   },
+    // },
     {
       path: '/deleteCartProduct',
       methods: {

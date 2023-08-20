@@ -25,14 +25,14 @@ module.exports = {
         },
       },
     },
-    {
-      path: '/getProductPrice',
-      methods: {
-        post: {
-          middlewares: [checkoutCtrls.getProductPrice],
-        },
-      },
-    },
+    // {
+    //   path: '/getProductPrice',
+    //   methods: {
+    //     post: {
+    //       middlewares: [checkoutCtrls.getProductPrice],
+    //     },
+    //   },
+    // },
     {
       path: '/addCheckout',
       methods: {

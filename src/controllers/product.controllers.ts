@@ -241,59 +241,60 @@ const getProductForIndex = async (req: Request, res: Response) => {
   }
 };
 
-const setProductProperity = async (req: Request, res: Response) => {
-  const {
-    product_id,
-    physical_quantity,
-    digital_quantity,
-    physical_price,
-    digital_price,
-    royalty,
-  } = req.body;
-  try {
-    const product = await Product.findById(product_id);
-    if (!product) {
-      return sendError(req, res, 400, 'Product does not exist');
-    }
-    if (product.category === 'PRINTS') {
-      return sendError(req, res, 400, 'Please change this product properties with correct method');
-    }
-    product.physical_quantity = physical_quantity;
-    product.digital_quantity = digital_quantity;
-    product.physical_price = physical_price;
-    product.digital_price = digital_price;
-    product.royalty = royalty;
-    await product.save();
-    return res.json({ success: true });
-  } catch (err) {
-    log('error', 'err:', err);
-    return sendError(req, res, 400, 'Invalid product data');
-  }
-};
-const setPrintsProperity = async (req: Request, res: Response) => {
-  const { product_id, quantity, price, royalty, crop_size } = req.body;
-  try {
-    const product = await Product.findById(product_id);
-    if (!product) {
-      return sendError(req, res, 400, 'Product does not exist');
-    }
-    if (product.category !== 'PRINTS') {
-      return sendError(req, res, 400, 'Please change this product properties with correct method');
-    }
-    const product_crop_object = product.crop_size_list.filter(
-      (crop_list) => crop_list.size === crop_size,
-    );
-    const index = product.crop_size_list.findIndex((value) => value === product_crop_object[0]);
-    product.crop_size_list[index].quantity = quantity;
-    product.crop_size_list[index].price = price;
-    product.crop_size_list[index].royalty = royalty;
-    await product.save();
-    return res.json({ success: true });
-  } catch (err) {
-    log('error', 'err:', err);
-    return sendError(req, res, 400, 'Invalid product data');
-  }
-};
+// const setProductProperity = async (req: Request, res: Response) => {
+//   const {
+//     product_id,
+//     physical_quantity,
+//     digital_quantity,
+//     physical_price,
+//     digital_price,
+//     royalty,
+//   } = req.body;
+//   try {
+//     const product = await Product.findById(product_id);
+//     if (!product) {
+//       return sendError(req, res, 400, 'Product does not exist');
+//     }
+//     if (product.category === 'PRINTS') {
+//       return sendError(req, res, 400, 'Please change this product properties with correct method');
+//     }
+//     product.physical_quantity = physical_quantity;
+//     product.digital_quantity = digital_quantity;
+//     product.physical_price = physical_price;
+//     product.digital_price = digital_price;
+//     product.royalty = royalty;
+//     await product.save();
+//     return res.json({ success: true });
+//   } catch (err) {
+//     log('error', 'err:', err);
+//     return sendError(req, res, 400, 'Invalid product data');
+//   }
+// };
+
+// const setPrintsProperity = async (req: Request, res: Response) => {
+//   const { product_id, quantity, price, royalty, crop_size } = req.body;
+//   try {
+//     const product = await Product.findById(product_id);
+//     if (!product) {
+//       return sendError(req, res, 400, 'Product does not exist');
+//     }
+//     if (product.category !== 'PRINTS') {
+//       return sendError(req, res, 400, 'Please change this product properties with correct method');
+//     }
+//     const product_crop_object = product.crop_size_list.filter(
+//       (crop_list) => crop_list.size === crop_size,
+//     );
+//     const index = product.crop_size_list.findIndex((value) => value === product_crop_object[0]);
+//     product.crop_size_list[index].quantity = quantity;
+//     product.crop_size_list[index].price = price;
+//     product.crop_size_list[index].royalty = royalty;
+//     await product.save();
+//     return res.json({ success: true });
+//   } catch (err) {
+//     log('error', 'err:', err);
+//     return sendError(req, res, 400, 'Invalid product data');
+//   }
+// };
 
 function getSKUSuffix(count: number) {
   if (count === 0) {
@@ -494,12 +495,12 @@ const addProduct = async (req: Request, res: Response) => {
     const prefix = user?.username.substring(0, 4).toUpperCase();
     const suffix = getSKUSuffix(total_products);
     const sku = prefix + '-' + suffix;
-    const image = await uploadFile(files[0], user?.username || '');
-    const displayImage = await uploadFile(files[0], user?.username || '');
-    // const image =
-    //   await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
-    // const displayImage =
-    //   await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    // const image = await uploadFile(files[0], user?.username || '');
+    // const displayImage = await uploadFile(files[0], user?.username || '');
+    const image =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
+    const displayImage =
+      await 'https://inkedfur.us-southeast-1.linodeobjects.com/kji04241af11751-a63d-484e-8d01-d1ee8dfa2706creator-ban.png';
     let status: string = await '';
     if (total_products > 4) {
       status = await PRODUCT_STATUS.PUBLISHED;
@@ -573,9 +574,9 @@ const cropProduct = async (req: Request, res: Response) => {
     if (!product) {
       return sendError(req, res, 400, 'Product does not exist.');
     }
-    if (product.category !== 'PRINTS') {
-      return sendError(req, res, 400, 'Product does not able to crop.');
-    }
+    // if (product.category !== 'PRINTS') {
+    //   return sendError(req, res, 400, 'Product does not able to crop.');
+    // }
     const cropListData = [];
     for (let i = 0; i < crop_list.length; i++) {
       cropListData.push({
@@ -717,11 +718,11 @@ export default {
   getProductByUserId,
   getProductByCategory,
   getAllProduct,
-  setProductProperity,
+  // setProductProperity,
   approveProduct,
   cropProduct,
   addMultiProducts,
-  setPrintsProperity,
+  // setPrintsProperity,
   uploadPortfolioImage,
   getProductByUser,
 };

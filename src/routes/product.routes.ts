@@ -193,22 +193,22 @@ module.exports = {
         },
       },
     },
-    {
-      path: '/setProductProperity',
-      methods: {
-        get: {
-          middlewares: [productCtrls.setProductProperity],
-        },
-      },
-    },
-    {
-      path: '/setPrintsProperity',
-      methods: {
-        post: {
-          middlewares: [productCtrls.setPrintsProperity],
-        },
-      },
-    },
+    // {
+    //   path: '/setProductProperity',
+    //   methods: {
+    //     get: {
+    //       middlewares: [productCtrls.setProductProperity],
+    //     },
+    //   },
+    // },
+    // {
+    //   path: '/setPrintsProperity',
+    //   methods: {
+    //     post: {
+    //       middlewares: [productCtrls.setPrintsProperity],
+    //     },
+    //   },
+    // },
     {
       path: '/deleteProduct',
       methods: {
