@@ -7,105 +7,86 @@ import { validateProps } from '~/lib/ajv';
  * @type { Routes.default }
  */
 module.exports = {
-    prefix: '/checkout',
-    routes: [
-        {
-            path: '/getSaleHistory',
-            methods: {
-                post: {
-                    middlewares: [
-                        isAuthenticated,
-                        checkoutCtrls.getSaleHistory,
-                    ],
-                },
-            },
+  prefix: '/checkout',
+  routes: [
+    {
+      path: '/getSaleHistory',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, checkoutCtrls.getSaleHistory],
         },
-        {
-            path: '/getPurchaseHistory',
-            methods: {
-                post: {
-                    middlewares: [
-                        isAuthenticated,
-                        checkoutCtrls.getPurchaseHistory
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/getPurchaseHistory',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, checkoutCtrls.getPurchaseHistory],
         },
-        {
-            path: '/getProductPrice',
-            methods: {
-                post: {
-                    middlewares: [
-                        checkoutCtrls.getProductPrice
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/getProductPrice',
+      methods: {
+        post: {
+          middlewares: [checkoutCtrls.getProductPrice],
         },
-        {
-            path: '/addCheckout',
-            methods: {
-                post: {
-                    middlewares: [
-                        checkoutCtrls.addCheckout
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/addCheckout',
+      methods: {
+        post: {
+          middlewares: [checkoutCtrls.addCheckout],
         },
-        {
-            path: '/updateRoyaltyStatus',
-            methods: {
-                post: {
-                    middlewares: [
-                        // isAuthenticated,
-                        // isAdmin,
-                        checkoutCtrls.updateRoyaltyStatus
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/updateRoyaltyStatus',
+      methods: {
+        post: {
+          middlewares: [
+            // isAuthenticated,
+            // isAdmin,
+            checkoutCtrls.updateRoyaltyStatus,
+          ],
         },
-        {
-            path: '/updateCheckoutStatus',
-            methods: {
-                post: {
-                    middlewares: [
-                        // isAuthenticated,
-                        checkoutCtrls.updateCheckoutStatus
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/updateCheckoutStatus',
+      methods: {
+        post: {
+          middlewares: [
+            // isAuthenticated,
+            checkoutCtrls.updateCheckoutStatus,
+          ],
         },
-        {
-            path: '/saveShippingAddress',
-            methods: {
-                post: {
-                    middlewares: [
-                        isAuthenticated,
-                        checkoutCtrls.saveShippingAddress
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/saveShippingAddress',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, checkoutCtrls.saveShippingAddress],
         },
-        {
-            path: '/getShippingAddress',
-            methods: {
-                get: {
-                    middlewares: [
-                        isAuthenticated,
-                        checkoutCtrls.getShippingAddress
-                    ],
-                },
-            },
+      },
+    },
+    {
+      path: '/getShippingAddress',
+      methods: {
+        get: {
+          middlewares: [isAuthenticated, checkoutCtrls.getShippingAddress],
         },
-        {
-            path: '/checkout',
-            methods: {
-                post: {
-                    middlewares: [
-                        checkoutCtrls.checkout,
-                        checkoutCtrls.addCheckout,
-                    ],
-                },
-            },
-        }
-    ],
+      },
+    },
+    {
+      path: '/checkout',
+      methods: {
+        post: {
+          middlewares: [isAuthenticated, checkoutCtrls.checkout, checkoutCtrls.addCheckout],
+        },
+      },
+    },
+  ],
 };

@@ -17,6 +17,7 @@ import User from '~/models/users.model';
 import { CheckoutInterface } from '~/interfaces';
 import Cart from '~/models/cart.model';
 import Statistic from '~/models/statistic.model';
+import { TypeSize } from '~/models/typesize.model';
 const log = debug('app:controllers:checkout');
 
 const getSaleHistory = async (req: Request, res: Response) => {
@@ -76,6 +77,7 @@ const getSaleHistory = async (req: Request, res: Response) => {
 
 const getPurchaseHistory = async (req: Request, res: Response) => {
   const { buyer_email, skip, index } = req.body;
+  console.log(req.body);
   try {
     const histories = await Checkout.aggregate([
       {
@@ -109,6 +111,8 @@ const getPurchaseHistory = async (req: Request, res: Response) => {
       .limit(skip)
       .skip((index - 1) * skip);
     const totalCount = await Checkout.count({ buyer_email });
+
+    console.log(histories);
     return res.json({ success: true, orders: histories, totalCount });
   } catch (err) {
     log('error', 'err:', err);
@@ -147,6 +151,8 @@ const getProductPrice = async (req: Request, res: Response) => {
 const addCheckout = async (req: Request, res: Response) => {
   const { products, shipToInfo, shippingInfo, totalPrice, tip, subTotal } = req.body;
   const { user, transactionId } = req;
+
+  console.log(user);
   try {
     const today = new Date();
     const yesterday = new Date(today);
@@ -167,34 +173,39 @@ const addCheckout = async (req: Request, res: Response) => {
       if (!product) {
         return sendError(req, res, 400, 'Product does not exist');
       }
-      let price: number;
-      let royalty: number;
-      let rest_quantity: number;
-      if (product.category === 'PRINTS') {
-        const product_crop_object = product.crop_size_list.filter(
-          (crop_list) => crop_list.size === products[i].crop_size,
-        );
-        product_crop_object ? (price = product_crop_object[0].price) : (price = 0);
-        royalty = (price * product_crop_object[0].royalty) / 100;
-        rest_quantity = product_crop_object[0].quantity - products[i].quantity;
-        //update quantity of crop in product
-        const index = product.crop_size_list.findIndex((value) => value === product_crop_object[0]);
-        product.crop_size_list[index].quantity = rest_quantity;
-      } else {
-        if (products[i].product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
-          price = product.physical_price;
-          //update quantity of crop in product
-          rest_quantity = product.physical_quantity - products[i].quantity;
-          product.physical_quantity = rest_quantity;
-        } else {
-          price = product.digital_price;
-          //update quantity of crop in product
-          rest_quantity = product.digital_quantity - products[i].quantity;
-          product.digital_quantity = rest_quantity;
-        }
-        royalty = (price * Number(product.royalty)) / 100;
-      }
-      await product.save();
+      // let price: number;
+
+      const size = await TypeSize.findOne({ size: products[i].size });
+      const price = await products[i].price;
+      console.log(price);
+      const royalty = ((await (price * Number(size?.royalty))) * products[i].quantity) / 100;
+      console.log(royalty);
+      const rest_quantity = 10 - products[i].quantity;
+      // if (product.category === 'PRINTS') {
+      //   const product_crop_object = product.crop_size_list.filter(
+      //     (crop_list) => crop_list.size === products[i].crop_size,
+      //   );
+      //   product_crop_object ? (price = product_crop_object[0].price) : (price = 0);
+      //   royalty = (price * product_crop_object[0].royalty) / 100;
+      //   rest_quantity = product_crop_object[0].quantity - products[i].quantity;
+      //   //update quantity of crop in product
+      //   const index = product.crop_size_list.findIndex((value) => value === product_crop_object[0]);
+      //   product.crop_size_list[index].quantity = rest_quantity;
+      // } else {
+      //   if (products[i].product_sell_type === PRODUCT_SELL_TYPE.PHYSICAL) {
+      //     price = product.physical_price;
+      //     //update quantity of crop in product
+      //     rest_quantity = product.physical_quantity - products[i].quantity;
+      //     product.physical_quantity = rest_quantity;
+      //   } else {
+      //     price = product.digital_price;
+      //     //update quantity of crop in product
+      //     rest_quantity = product.digital_quantity - products[i].quantity;
+      //     product.digital_quantity = rest_quantity;
+      //   }
+      //   royalty = (price * Number(product.royalty)) / 100;
+      // }
+      // await product.save();
       if (products[i].cart_id) {
         const cart = await Cart.findById(products[i].cart_id);
         await cart?.deleteOne();
@@ -208,7 +219,13 @@ const addCheckout = async (req: Request, res: Response) => {
       });
       if (!customer) {
         const date = new Date().toLocaleDateString();
-        await Statistic.create({ creator_id: product.user_id, sales: 1, royalties: royalty, date });
+        await Statistic.create({
+          creator_id: product.user_id,
+          sales: 1,
+          royalties: royalty,
+          date,
+          tips: products[i].tip,
+        });
       } else {
         customer.sales += 1;
         customer.royalties += royalty;
@@ -223,7 +240,8 @@ const addCheckout = async (req: Request, res: Response) => {
         product_id: product._id,
         quantity: products[i].quantity,
         unitPrice: price,
-        crop_size: products[i].crop_size,
+        crop_size: products[i].size,
+        type: products[i].category,
         shippingInfo,
         shipTo: shipToInfo,
         totalPrice: Number(totalPrice) + Number(shippingInfo.price),
@@ -458,6 +476,7 @@ const checkout = async (req: Request, res: Response, next: NextFunction) => {
     createRequest.setTransactionRequest(transactionRequestType);
 
     const ctrl = new APIControllers.CreateTransactionController(createRequest.getJSON());
+    console.log(ctrl);
 
     ctrl.execute(function () {
       const apiResponse = ctrl.getResponse();

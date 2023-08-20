@@ -27,9 +27,13 @@ const checkoutSchema = new mongoose.Schema(
     },
     unitPrice: {
       type: Number,
-      default: 0
+      default: 0,
     },
     crop_size: {
+      type: String,
+      default: '',
+    },
+    type: {
       type: String,
       default: '',
     },
@@ -41,7 +45,7 @@ const checkoutSchema = new mongoose.Schema(
     product_sell_type: {
       type: String,
       enum: Object.values(PRODUCT_SELL_TYPE),
-      default: 'PHYSICAL'
+      default: 'PHYSICAL',
     },
     shippingInfo: {
       type: {
@@ -52,8 +56,8 @@ const checkoutSchema = new mongoose.Schema(
         price: {
           type: String,
           default: '',
-        }
-      }
+        },
+      },
     },
     shipTo: {
       type: {
@@ -93,19 +97,19 @@ const checkoutSchema = new mongoose.Schema(
           type: String,
           default: '',
         },
-      }
+      },
     },
     totalPrice: {
       type: String,
-      default: ''
+      default: '',
     },
     subTotal: {
       type: String,
-      default: ''
+      default: '',
     },
     tip: {
       type: String,
-      default: ''
+      default: '',
     },
     checkout_status: {
       type: String,
@@ -120,7 +124,7 @@ const checkoutSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(RORYALTY_STATUS),
       default: 'UNPAID',
-    }
+    },
   },
   { timestamps: true },
 );

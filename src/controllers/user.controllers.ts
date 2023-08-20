@@ -179,6 +179,7 @@ const getCustomers = async (req: Request, res: Response) => {
 
 const updateVisitors = async (req: Request, res: Response) => {
   const { creator_id } = req.body;
+  console.log(creator_id);
   try {
     const today = new Date();
     const yesterday = new Date(today);
@@ -209,6 +210,7 @@ const updateVisitors = async (req: Request, res: Response) => {
 const getStatistic = async (req: Request, res: Response) => {
   const { from, to } = req.body;
   const { user } = req;
+  console.log(user);
   try {
     const statistic = await Statistic.aggregate([
       {
@@ -316,9 +318,10 @@ const getStatistic = async (req: Request, res: Response) => {
 
 const getCreatorByID = async (req: Request, res: Response) => {
   const { user_id } = req.body;
+  console.log(user_id);
   try {
     const creator = await User.findOne({
-      user_id,
+      _id: user_id,
       roles: Roles.CREATOR,
       active: true,
       status: USER_STATUS.ACTIVATE,
@@ -327,7 +330,10 @@ const getCreatorByID = async (req: Request, res: Response) => {
     if (!creator) {
       return sendError(req, res, 400, 'Customer does not exist.');
     }
-    return res.json({ success: true, creator: getPublic(creator, 'creator') });
+    console.log(creator);
+
+    const products = await Product.find({ user_id: user_id });
+    return res.json({ success: true, creator: getPublic(creator, 'creator'), products });
   } catch (err) {
     log('error', 'err:', err);
     return sendError(req, res, 400, 'Invalid user data:');
@@ -350,7 +356,7 @@ const getCreators = async (req: Request, res: Response) => {
     }
     const creatorList: any = [];
     for (let i = 0; i < creators.length; i++) {
-      const submissionCount = await Submission.count({ user_id: creators[i].id });
+      const submissionCount = await Product.count({ user_id: creators[i].id });
       creatorList.push({
         id: creators[i].id,
         username: creators[i].username,
